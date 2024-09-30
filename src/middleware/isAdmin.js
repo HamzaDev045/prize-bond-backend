@@ -8,7 +8,6 @@ const isAdmin = async (req, res, next) => {
   try {
  
     const { username } = req.body; 
-
     if (!username) {
       return next(
         apiError.badRequest(MESSEGES.USERNAME_MISSING, "isAuthorized")
@@ -16,10 +15,6 @@ const isAdmin = async (req, res, next) => {
     }
 
     const user = await getUserByConditions({ username });
-
-    
- 
-    
 
     if (!user) {
       return next(

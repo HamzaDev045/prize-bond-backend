@@ -1,7 +1,11 @@
-
 import { validateSignUpInputs, validateSignInInputs } from "./validation.js";
 
-import { countUsersByCondition, createUser, getAllUser, getUserByConditions } from "./services.js";
+import {
+  countUsersByCondition,
+  createUser,
+  getAllUser,
+  getUserByConditions,
+} from "./services.js";
 import {
   apiError,
   generateToken,
@@ -12,6 +16,7 @@ import { MESSEGES } from "../../constants/index.js";
 // Admin signup
 export const signUp = async (req, res, next) => {
   const validationResult = validateSignUpInputs(req.body);
+  console.log(validationResult, "validationResult");
 
   if (validationResult?.error)
     return next(apiError.badRequest(validationResult?.msg, "signUp"));
@@ -68,15 +73,13 @@ export const signIn = async (req, res, next) => {
 
     delete existingUser.password;
 
-    return res
-      .status(201)
-      .send({
-        isSucess: true,
-        message: MESSEGES.SIGNIN_SUCCESSFULL,
-        token,
-        refreshToken,
-        data: { ...existingUser },
-      });
+    return res.status(201).send({
+      isSucess: true,
+      message: MESSEGES.SIGNIN_SUCCESSFULL,
+      token,
+      refreshToken,
+      data: { ...existingUser },
+    });
   } catch (error) {
     console.log(error);
     return next(apiError.internal(error, "signup"));
@@ -85,7 +88,7 @@ export const signIn = async (req, res, next) => {
 
 export const createNewUser = async (req, res, next) => {
   try {
-
+    console.log("1");
 
     const user = await createUser(
       {
@@ -93,17 +96,16 @@ export const createNewUser = async (req, res, next) => {
       },
       next
     );
-
+    console.log("hello");
+    
     if (!user)
       throw next(apiError.badRequest(MESSEGES.USER_CREATION_FAILED, "signup"));
 
-    return res
-      .status(201)
-      .send({
-        isSuccess: true,
-        message: MESSEGES.EMAIL_SENT,
-        data: { email: req.body?.email },
-      });
+    return res.status(201).send({
+      isSuccess: true,
+      message: MESSEGES.EMAIL_SENT,
+      data: { email: req.body?.email },
+    });
   } catch (error) {
     console.log(error);
     return next(apiError.internal(error, "signup"));
@@ -133,22 +135,21 @@ export const updateBalance = async (req, res, next) => {
 
 export const getUsers = async (req, res, next) => {
   try {
-    let user = await getAllUser()
+    let user = await getAllUser();
 
     if (user.length <= 0) {
       return next(
         apiError.badRequest(MESSEGES.USER_DOES_NOT_EXIST, "updateBalanceAdmin")
       );
     }
-const userCount=await countUsersByCondition();
+    const userCount = await countUsersByCondition();
 
-
-     return res.status(201).send({
-       isSucess: true,
-       message: MESSEGES.USER_RETREIVED,
-       totalUsers: userCount,
-       data: [...user],
-     });
+    return res.status(201).send({
+      isSucess: true,
+      message: MESSEGES.USER_RETREIVED,
+      totalUsers: userCount,
+      data: [...user],
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
