@@ -6,10 +6,17 @@ export const getUserByConditions = async (condition, removeFields = "") => {
   return await UserModel.findOne({ ...condition }).select(removeFields); // .populate(populateBy)
 };
 
-export const getAllUser = async () => {
-  return await UserModel.find({role:"user"}); // .populate(populateBy)
+
+
+// Update user data
+export const updateUserbyId = async (userId, updateData) => {
+  return await UserModel.findByIdAndUpdate(userId, updateData, { new: true });
 };
 
+
+export const getAllUser = async (skip, limit) => {
+  return await UserModel.find({ role: "user" }).skip(skip).limit(limit);
+};
 export const updateUserByCondition = async (condition, data) => {
   return await UserModel.findOneAndUpdate({ ...condition }, data, {
     new: true,
@@ -27,9 +34,9 @@ export const createUser = async (data, next) => {
     );
   }
   const savedUser=await UserModel.create(data);
-  console.log(savedUser,"saved USer");
+  // console.log(savedUser,"saved USer");
   
-  return await UserModel.create(data);
+  return await savedUser;
 };
 
 // export const updateUser = async (

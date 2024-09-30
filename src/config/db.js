@@ -8,9 +8,8 @@ async function connect() {
         } else {
 
             url =
-              "mongodb+srv://hamza:DPfDCRud4niLTyT9@cluster0.ykykt2i.mongodb.net/number-system";
-            // url = `mongodb://localhost:27017/synthflow_dev2`;
-            // url = process.env.mongoConnectivityString;
+              "mongodb+srv://hamza:ycFBBZs8korSSjPA@cluster0.ykykt2i.mongodb.net/number-system";
+    
         }
 
         await mongoose.connect(url, {
@@ -21,7 +20,7 @@ async function connect() {
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error.message);
-        process.exit(1); // Exit the process if unable to connect to MongoDB
+        process.exit(1);
     }
 }
 

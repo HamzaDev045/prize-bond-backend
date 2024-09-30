@@ -99,9 +99,10 @@ const Messages = {
   COULD_NOT_UPDATE_CUSTOMER_DETAILS: "could not update customer details",
   // **********************************************************************
   SIGNUP_SUCCESSFULL: "Sign up successfully",
-  USER_RETREIVED: "Users Retreived Successfully!",
+  USERS_RETRIEVED: "Users Retreived Successfully!",
   UNAUTHORIZED_ROLE: "Only Admin have Permission to Perform this Task",
-  USERNAME_MISSING:"username is required"
+  USERNAME_MISSING: "username is required",
+  USER_CREATED: "New User Created Successfully",
 };
 
 export default Messages
