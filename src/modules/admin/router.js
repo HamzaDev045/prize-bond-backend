@@ -8,7 +8,7 @@ const router = Router()
 
 router
 
-  .post("/signup", controller.signUp)
+  .post("/signup", controller.signUp)   
   .post("/signin", controller.signIn)
   // .post("/create-user", isAuthorized,isAdmin, controller.createNewUser)
   .post("/create-user", isAuthorized, controller.createNewUser)
