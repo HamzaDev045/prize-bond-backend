@@ -3,6 +3,7 @@ import { validateSignUpInputs, validateSignInInputs } from "./validation.js";
 import {
   countUsersByCondition,
   createUser,
+  deleteUserById,
   getAllUser,
   getUserByConditions,
   updateUserbyId,
@@ -13,30 +14,7 @@ import {
   generateRefreshToken,
 } from "../../utils/index.js";
 import { MESSEGES } from "../../constants/index.js";
-
-// Admin signup
-// export const signUp = async (req, res, next) => {
-//   const validationResult = validateSignUpInputs(req.body);
-
-//   if (validationResult?.error)
-//     return next(apiError.badRequest(validationResult?.msg, "signUp"));
-
-//   // const { username, password } = req.body;
-
-//   try {
-//     const admin = await createUser({ ...req.body, role: "admin" }, next);
-
-//     if (!admin)
-//       throw next(apiError.badRequest(MESSEGES.USER_CREATION_FAILED, "signup"));
-
-//     return res
-//       .status(201)
-//       .send({ isSucess: true, message: MESSEGES.SIGNUP_SUCCESSFULL });
-//   } catch (error) {
-//     console.log(error);
-//     return next(apiError.internal(error, "signup"));
-//   }
-// };
+import { Bond } from "./model.js";
 
 export const signIn = async (req, res, next) => {
   try {
@@ -113,6 +91,27 @@ export const createNewUser = async (req, res, next) => {
 };
 
 
+export const deleteUser = async (req, res, next) => {
+  try {
+    const userId = req.params.id; 
+    
+    const user = await deleteUserById(userId, next);
+    
+    if (!user) {
+      throw next(apiError.notFound(MESSEGES.USER_NOT_FOUND, "deleteUser"));
+    }
+
+    return res.status(200).send({
+      isSuccess: true,
+      message: MESSEGES.USER_DELETED,
+      data: { userId },
+    });
+  } catch (error) {
+    console.log(error);
+    return next(apiError.internal(error, "deleteUser"));
+  }
+};
+
 
 export const updateUser = async (req, res, next) => {
   
@@ -148,6 +147,8 @@ export const updateUser = async (req, res, next) => {
 };
 
 
+
+
 export const getUsers = async (req, res, next) => {
   const { page = 1, limit = 10 } = req.query;
 
@@ -176,9 +177,54 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
+
+
+export const createBond = async (req, res, next) => {
+    try {
+    const { bondType, date } = req.body;
+    const bond = new Bond({ bondType, date });
+    await bond.save();
+    res.status(201).json(bond);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+ 
+};
+
+
+export const getAllBonds = async (req, res, next) => {
+  try {
+    const bonds = await Bond.find();
+    res.json(bonds);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+ 
+};
+
+
+export const updateBond = async (req, res, next) => {
+   try {
+    const { bondType, date } = req.body;
+    const bond = await Bond.findByIdAndUpdate(
+      req.params.id,
+      { bondType, date },
+      { new: true, runValidators: true }
+    );
+    if (!bond) {
+      return res.status(404).json({ message: 'Bond not found' });
+    }
+    res.json(bond);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+}
 export default {
-  // signUp,
+  updateBond,
+  deleteUser,
+  getAllBonds,
   signIn,
+  createBond,
   createNewUser,
   updateUser,
   getUsers,

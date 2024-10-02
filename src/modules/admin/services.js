@@ -14,6 +14,16 @@ export const updateUserbyId = async (userId, updateData) => {
 };
 
 
+export const deleteUserById = async (userId, next) => {
+  try {
+    const user = await UserModel.findByIdAndDelete(userId); 
+    return user;
+  } catch (error) {
+    next(apiError.internal(error, "deleteUserById"));
+    return null; 
+  }
+};
+
 export const getAllUser = async (skip, limit) => {
   return await UserModel.find({ role: "user" }).skip(skip).limit(limit);
 };
@@ -57,9 +67,9 @@ export const updateUserById = async (userId, data, next) => {
   return await UserModel.findOneAndUpdate({ _id: mongooseUserId }, data);
 };
 
-export const deleteUserById = async (data) => {
-  return await UserModel.findOneAndDelete({ _id: data.userId });
-};
+// export const deleteUserById = async (data) => {
+//   return await UserModel.findOneAndDelete({ _id: data.userId });
+// };
 
 export const getAllUsersByConditionsByRole = async (
   condition,

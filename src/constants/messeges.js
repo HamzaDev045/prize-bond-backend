@@ -103,6 +103,8 @@ const Messages = {
   UNAUTHORIZED_ROLE: "Only Admin have Permission to Perform this Task",
   USERNAME_MISSING: "username is required",
   USER_CREATED: "New User Created Successfully",
+  USER_NOT_FOUND: "User Not Found",
+  USER_DELETED:"User deleted successfully"
 };
 
 export default Messages

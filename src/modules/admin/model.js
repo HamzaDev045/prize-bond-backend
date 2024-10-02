@@ -32,6 +32,8 @@ export const userSchema = new mongoose.Schema(
 
 
 
+
+
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
@@ -69,5 +71,13 @@ userSchema.methods.checkPassword = async function (password) {
     throw apiError.internal(error, 'checkPassword');
   }
 };
+
+
+const bondSchema = new mongoose.Schema({
+  bondType: { type: String, required: true },
+  date: { type: Date, required: true },
+});
+
+export const Bond = mongoose.model('Bond', bondSchema);
 
 export const UserModel = mongoose.model('User', userSchema);
