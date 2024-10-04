@@ -5,10 +5,7 @@ export const validateSignUpInputs = (data) => {
 
     username: Joi.string().required(),
     password: Joi.string().min(8).max(30).required(),
-    confirmPassword: Joi.string().min(8).max(30).required()
-      .valid(Joi.ref('password'))
-      .messages({ 'any.only': MESSEGES.PASSWORD_MISMATCH })
-    ,
+   
   })
 
   const result = Schema.validate(data)

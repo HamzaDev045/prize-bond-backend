@@ -72,6 +72,10 @@ export const signIn = async (req, res, next) => {
 
 export const createNewUser = async (req, res, next) => {
   try {
+    // const validationResult = validateSignUpInputs(req.body);
+
+    // if (validationResult?.error)
+    //   return next(apiError.badRequest(validationResult?.msg, "signUp"));
     const user = await createUser(
       {
         ...req.body,
@@ -138,7 +142,7 @@ export const updateUser = async (req, res, next) => {
       );
     }
 
-    res.json({ msg: "User updated successfully", data: updatedUser });
+    res.json({ message: "User updated successfully", data: updatedUser });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
@@ -176,9 +180,31 @@ export const getUsers = async (req, res, next) => {
 export const createBond = async (req, res, next) => {
   try {
     const { bondType, date } = req.body;
-    const bond = new Bond({ bondType, date });
+    const isDisable = true
+    const bond = new Bond({ bondType, date ,isDisable });
     await bond.save();
-    res.status(201).json(bond);
+    res
+      .status(201)
+      .json({ isSuccess: true, message: MESSEGES.USER_DELETED, data: bond });
+  } catch (error) {
+    res.status(400).json({isSuccess: false, message: error.message });
+  }
+};
+
+export const activateBond = async (req, res, next) => {
+  try {
+    const { isDisable } = req.body;
+    console.log(req.body , "isDisable");
+    
+    const bond = await Bond.findByIdAndUpdate(
+      req.params.id,
+      { isDisable },
+      { new: true, runValidators: true }
+    );
+    if (!bond) {
+      return res.status(404).json({ message: "Bond not found" });
+    }
+    res.json({ isSuccess: true, message: "Bond Activated Sucessfuly "});
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -187,7 +213,7 @@ export const createBond = async (req, res, next) => {
 export const getAllBonds = async (req, res, next) => {
   try {
     const bonds = await Bond.find();
-    res.json(bonds);
+    res.json({ isSuccess: true, message: "Bond Activated Sucessfuly" , data:bonds});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -317,6 +343,7 @@ export const purchaseFigures = async (req, res) => {
 
 export default {
   updateBond,
+  activateBond,
   deleteUser,
   getAllBonds,
   signIn,

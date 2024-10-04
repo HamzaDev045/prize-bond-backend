@@ -13,13 +13,10 @@ export const userSchema = new mongoose.Schema(
     role: { type: String, enum: ["admin", "user"], default: "user" },
     email: {
       type: String,
-  
       unique: true,
     },
     address: {
       type: String,
-  
-      unique: true,
     },
     phoneNo: {
       type: String,
@@ -75,6 +72,7 @@ userSchema.methods.checkPassword = async function (password) {
 const bondSchema = new mongoose.Schema({
     bondType: { type: String },
     date: { type: Date },
+    isDisable:{ type: Boolean },
     figures: {
         figure: { type: Number},
         first: { type: Number,},
