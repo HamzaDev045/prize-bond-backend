@@ -7,24 +7,23 @@ import { apiError } from '../../utils/index.js'
 
 export const userSchema = new mongoose.Schema(
   {
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    username: { type: String,  unique: true },
+    password: { type: String,  },
     balance: { type: Number, default: 0 },
     role: { type: String, enum: ["admin", "user"], default: "user" },
     email: {
       type: String,
-      required: true,
+  
       unique: true,
     },
     address: {
       type: String,
-      required: true,
+  
       unique: true,
     },
     phoneNo: {
       type: String,
-      required: true,
-      unique: true,
+        unique: true,
     },
   },
   { timestamps: true }
@@ -74,10 +73,14 @@ userSchema.methods.checkPassword = async function (password) {
 
 
 const bondSchema = new mongoose.Schema({
-  bondType: { type: String, required: true },
-  date: { type: Date, required: true },
+    bondType: { type: String },
+    date: { type: Date },
+    figures: {
+        figure: { type: Number},
+        first: { type: Number,},
+        second: { type: Number, }
+    }
 });
-
 export const Bond = mongoose.model('Bond', bondSchema);
 
 export const UserModel = mongoose.model('User', userSchema);

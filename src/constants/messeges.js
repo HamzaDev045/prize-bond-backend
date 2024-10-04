@@ -104,7 +104,8 @@ const Messages = {
   USERNAME_MISSING: "username is required",
   USER_CREATED: "New User Created Successfully",
   USER_NOT_FOUND: "User Not Found",
-  USER_DELETED:"User deleted successfully"
+  USER_DELETED:"User deleted successfully",
+  BOND_NOT_FOUND:"Bond not found with the given figure"
 };
 
 export default Messages

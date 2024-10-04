@@ -1,4 +1,9 @@
-import { validateSignUpInputs, validateSignInInputs } from "./validation.js";
+import {
+  validateSignUpInputs,
+  validateSignInInputs,
+  schema,
+  purchaseSchema,
+} from "./validation.js";
 
 import {
   countUsersByCondition,
@@ -14,13 +19,13 @@ import {
   generateRefreshToken,
 } from "../../utils/index.js";
 import { MESSEGES } from "../../constants/index.js";
-import { Bond } from "./model.js";
+import { Bond, UserModel } from "./model.js";
 
 export const signIn = async (req, res, next) => {
   try {
-    let { password, username } = req.body;
-
     const validationResult = validateSignInInputs(req.body);
+
+    let { password, username } = req.body;
 
     if (validationResult?.error) {
       return next(apiError.badRequest(validationResult?.msg, "signin"));
@@ -38,8 +43,6 @@ export const signIn = async (req, res, next) => {
       return next(apiError.badRequest(MESSEGES.PASSWORD_INVALID, "signin"));
 
     existingUser = existingUser.toObject({ getters: true });
-
-
 
     const tokenPayload = {
       _id: existingUser?._id,
@@ -69,12 +72,12 @@ export const signIn = async (req, res, next) => {
 
 export const createNewUser = async (req, res, next) => {
   try {
-     const user = await createUser(
+    const user = await createUser(
       {
         ...req.body,
       },
       next
-    );    
+    );
 
     if (!user)
       throw next(apiError.badRequest(MESSEGES.USER_CREATION_FAILED, "signup"));
@@ -90,13 +93,12 @@ export const createNewUser = async (req, res, next) => {
   }
 };
 
-
 export const deleteUser = async (req, res, next) => {
   try {
-    const userId = req.params.id; 
-    
+    const userId = req.params.id;
+
     const user = await deleteUserById(userId, next);
-    
+
     if (!user) {
       throw next(apiError.notFound(MESSEGES.USER_NOT_FOUND, "deleteUser"));
     }
@@ -112,9 +114,7 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-
 export const updateUser = async (req, res, next) => {
-  
   const { userId } = req.params;
 
   if (!userId) {
@@ -130,7 +130,6 @@ export const updateUser = async (req, res, next) => {
       );
     }
 
-
     const updatedUser = await updateUserbyId(userId, req.body);
 
     if (!updatedUser) {
@@ -145,9 +144,6 @@ export const updateUser = async (req, res, next) => {
     res.status(500).send("Server Error");
   }
 };
-
-
-
 
 export const getUsers = async (req, res, next) => {
   const { page = 1, limit = 10 } = req.query;
@@ -177,10 +173,8 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
-
-
 export const createBond = async (req, res, next) => {
-    try {
+  try {
     const { bondType, date } = req.body;
     const bond = new Bond({ bondType, date });
     await bond.save();
@@ -188,9 +182,7 @@ export const createBond = async (req, res, next) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
- 
 };
-
 
 export const getAllBonds = async (req, res, next) => {
   try {
@@ -199,12 +191,10 @@ export const getAllBonds = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
- 
 };
 
-
 export const updateBond = async (req, res, next) => {
-   try {
+  try {
     const { bondType, date } = req.body;
     const bond = await Bond.findByIdAndUpdate(
       req.params.id,
@@ -212,13 +202,119 @@ export const updateBond = async (req, res, next) => {
       { new: true, runValidators: true }
     );
     if (!bond) {
-      return res.status(404).json({ message: 'Bond not found' });
+      return res.status(404).json({ message: "Bond not found" });
     }
     res.json(bond);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-}
+};
+
+export const figures = async (req, res, next) => {
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+
+  try {
+    const bond = new Bond(value);
+    await bond.save();
+    res.status(201).send({
+      message: "Bond data saved successfully",
+      data: bond,
+    });
+  } catch (err) {
+    console.error("Error saving bond:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const getFiguresByFigure = async (req, res,next) => {
+  const { figure } = req.params;
+
+  try {
+    const bond = await Bond.findOne({ "figures.figure": figure });
+
+    if (!bond) {
+           throw next(
+             apiError.badRequest(MESSEGES.BOND_NOT_FOUND, "getFiguresByFigure")
+           );
+    
+    }
+
+    res.status(200).send({
+      message: "Bond data retrieved successfully",
+      data: {
+        first: bond.figures.first,
+        second: bond.figures.second,
+      },
+    });
+  } catch (err) {
+    console.error("Error retrieving bond:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+export const purchaseFigures = async (req, res) => {
+  const { error, value } = purchaseSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+
+  const {  figure, firstAmount, secondAmount } = value;
+
+  const userId = req.userId;
+  try {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    const bond = await Bond.findOne({ "figures.figure": figure });
+    if (!bond) {
+      return res.status(404).send("Bond not found with the given figure");
+    }
+
+    if (
+      firstAmount > bond.figures.first ||
+      secondAmount > bond.figures.second
+    ) {
+      
+      return res.status(400).send("Requested amounts exceed available figures");
+    }
+
+    const totalCost = firstAmount + secondAmount;
+
+    if (totalCost > user.balance) {
+      return res.status(400).send("Insufficient balance");
+    }
+
+    bond.figures.first -= firstAmount;
+    bond.figures.second -= secondAmount;
+
+    user.balance -= totalCost;
+
+    await bond.save();
+    await user.save();
+
+
+
+
+    res.status(200).send({
+      isSucess: true,
+      message: " Bond Purchase successful",
+      data: {
+        bond: bond,
+        user: user,
+      },
+    });
+  } catch (err) {
+    console.error("Error processing purchase:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 export default {
   updateBond,
   deleteUser,
@@ -228,4 +324,7 @@ export default {
   createNewUser,
   updateUser,
   getUsers,
+  figures,
+  getFiguresByFigure,
+  purchaseFigures,
 };
