@@ -5,10 +5,7 @@ export const validateSignUpInputs = (data) => {
 
     username: Joi.string().required(),
     password: Joi.string().min(8).max(30).required(),
-    confirmPassword: Joi.string().min(8).max(30).required()
-      .valid(Joi.ref('password'))
-      .messages({ 'any.only': MESSEGES.PASSWORD_MISMATCH })
-    ,
+   
   })
 
   const result = Schema.validate(data)
@@ -33,3 +30,17 @@ export const validateSignInInputs = (data) => {
   }
 
 }
+
+export const schema = Joi.object({
+    bondType: Joi.string().required(),
+    figures: Joi.object({
+        figure: Joi.number().required(),
+        first: Joi.number().required(),
+        second: Joi.number().required()
+    }).required()
+})
+export const purchaseSchema = Joi.object({
+    figure: Joi.number().required(),
+    firstAmount: Joi.number().min(0).required(),
+    secondAmount: Joi.number().min(0).required()
+});

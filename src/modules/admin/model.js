@@ -3,85 +3,32 @@ import mongoose from 'mongoose'
 import { config } from '../../config/index.js'
 import { apiError } from '../../utils/index.js'
 
-// export const userSchema = mongoose.Schema(
-//   {
-//     fullName: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//       minlength: 2,
-//       maxlength: 50,
-//     },
-//     username: {
-//       type: String,
-//       required: true,
-//       unique: true
-//     },
-//     email: {
-//       type: String,
-//       required: true,
-//       unique: true
-//     },
-//     password: {
-//       type: String,
-//       required: true,
-//       minlength: 8
-//     },
-//     companyId: {
-//       type: mongoose.Types.ObjectId,
-//       ref: 'Company',
-//       default: null
-//     },
-//     roleId:
-//     {
-//       type: mongoose.Types.ObjectId,
-//       ref: 'Roles',
-//       default: null
-//     }
-//     ,
-//     accountVerificationMethods: {
-//       isEmailVerified: {
-//         type: Boolean,
-//         default: false
-//       },
-//       isPhoneVerified: {
-//         type: Boolean,
-//         default: false
-//       }
-//     },
-//     accountType: {
-//       type: String,
-//       enum: ["user", "owner"],
-//       default: "owner",
-//       lowercase: true
-//     },
-//     isAccountEnable: {
-//       type: Boolean,
-//       default: true
-//     },
-//     resetToken: { type: String, default: "" },
-//     resetTokenExpiry: { type: Date, default: null },
-//     accessSharedBy: {
-//       type: [{
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: 'User'
-//       }],
-//       default: []
-//     }
-//   },
-//   { timestamps: true },
-// )
+
 
 export const userSchema = new mongoose.Schema(
   
   {
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    username: { type: String,  unique: true },
+    password: { type: String,  },
     balance: { type: Number, default: 0 },
     role: { type: String, enum: ["admin", "user"], default: "user" },
+    email: {
+      type: String,
+      unique: true,
+    },
+    address: {
+      type: String,
+    },
+    phoneNo: {
+      type: String,
+        unique: true,
+    },
   },
   { timestamps: true }
 );
+
+
+
 
 
 userSchema.pre('save', async function (next) {
@@ -121,5 +68,18 @@ userSchema.methods.checkPassword = async function (password) {
     throw apiError.internal(error, 'checkPassword');
   }
 };
+
+
+const bondSchema = new mongoose.Schema({
+    bondType: { type: String },
+    date: { type: Date },
+    isDisable:{ type: Boolean },
+    figures: {
+        figure: { type: Number},
+        first: { type: Number,},
+        second: { type: Number, }
+    }
+});
+export const Bond = mongoose.model('Bond', bondSchema);
 
 export const UserModel = mongoose.model('User', userSchema);
