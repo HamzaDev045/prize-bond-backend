@@ -83,7 +83,7 @@ export const createNewUser = async (req, res, next) => {
       next
     );
     console.log("hello");
-    
+
     if (!user)
       throw next(apiError.badRequest(MESSEGES.USER_CREATION_FAILED, "signup"));
 
@@ -181,22 +181,22 @@ export const getUsers = async (req, res, next) => {
 export const createBond = async (req, res, next) => {
   try {
     const { bondType, date } = req.body;
-    const isDisable = true
-    const bond = new Bond({ bondType, date ,isDisable });
+    const isDisable = true;
+    const bond = new Bond({ bondType, date, isDisable });
     await bond.save();
     res
       .status(201)
       .json({ isSuccess: true, message: MESSEGES.USER_DELETED, data: bond });
   } catch (error) {
-    res.status(400).json({isSuccess: false, message: error.message });
+    res.status(400).json({ isSuccess: false, message: error.message });
   }
 };
 
 export const activateBond = async (req, res, next) => {
   try {
     const { isDisable } = req.body;
-    console.log(req.body , "isDisable");
-    
+    console.log(req.body, "isDisable");
+
     const bond = await Bond.findByIdAndUpdate(
       req.params.id,
       { isDisable },
@@ -205,7 +205,7 @@ export const activateBond = async (req, res, next) => {
     if (!bond) {
       return res.status(404).json({ message: "Bond not found" });
     }
-    res.json({ isSuccess: true, message: "Bond Activated Sucessfuly "});
+    res.json({ isSuccess: true, message: "Bond Activated Sucessfuly " });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -214,24 +214,43 @@ export const activateBond = async (req, res, next) => {
 export const getAllBonds = async (req, res, next) => {
   try {
     const bonds = await Bond.find();
-    res.json({ isSuccess: true, message: "Bond Activated Sucessfuly" , data:bonds});
+    res.json({
+      isSuccess: true,
+      message: "Bond Activated Sucessfuly",
+      data: bonds,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ isSuccess: false, message: error.message });
   }
 };
 
 export const updateBond = async (req, res, next) => {
   try {
-    const { bondType, date } = req.body;
+    const { date } = req.body;
+    if (!date) {
+      return res
+        .status(404)
+        .json({ isSuccess: false, message: "Please select an date" });
+    }
+    const [day, month, year] = date.split("-");
+    const parsedDate = new Date(`${year}-${month}-${day}`);
+
+    if (isNaN(parsedDate.getTime())) {
+      return res
+        .status(400)
+        .json({ isSuccess: false, message: "Invalid date format" });
+    }
     const bond = await Bond.findByIdAndUpdate(
       req.params.id,
-      { bondType, date },
+      { date: parsedDate },
       { new: true, runValidators: true }
     );
     if (!bond) {
-      return res.status(404).json({ message: "Bond not found" });
+      return res
+        .status(404)
+        .json({ isSuccess: false, message: "Bond not found" });
     }
-    res.json(bond);
+    res.json({ isSuccess: true, message: "Date Changed Sucessfuly" });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -257,17 +276,16 @@ export const figures = async (req, res, next) => {
   }
 };
 
-export const getFiguresByFigure = async (req, res,next) => {
+export const getFiguresByFigure = async (req, res, next) => {
   const { figure } = req.params;
 
   try {
     const bond = await Bond.findOne({ "figures.figure": figure });
 
     if (!bond) {
-           throw next(
-             apiError.badRequest(MESSEGES.BOND_NOT_FOUND, "getFiguresByFigure")
-           );
-    
+      throw next(
+        apiError.badRequest(MESSEGES.BOND_NOT_FOUND, "getFiguresByFigure")
+      );
     }
 
     res.status(200).send({
@@ -289,7 +307,7 @@ export const purchaseFigures = async (req, res) => {
     return res.status(400).send(error.details[0].message);
   }
 
-  const {  figure, firstAmount, secondAmount } = value;
+  const { figure, firstAmount, secondAmount } = value;
 
   const userId = req.userId;
   try {
@@ -307,7 +325,6 @@ export const purchaseFigures = async (req, res) => {
       firstAmount > bond.figures.first ||
       secondAmount > bond.figures.second
     ) {
-      
       return res.status(400).send("Requested amounts exceed available figures");
     }
 
@@ -324,9 +341,6 @@ export const purchaseFigures = async (req, res) => {
 
     await bond.save();
     await user.save();
-
-
-
 
     res.status(200).send({
       isSucess: true,
