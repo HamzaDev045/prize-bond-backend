@@ -8,20 +8,28 @@ import { apiError } from '../../utils/index.js'
 export const userSchema = new mongoose.Schema(
   
   {
-    username: { type: String,  unique: true },
-    password: { type: String,  },
+    username: { type: String  },
+    password: { type: String  },
     balance: { type: Number, default: 0 },
     role: { type: String, enum: ["admin", "user"], default: "user" },
     email: {
       type: String,
-      unique: true,
+      
     },
     address: {
       type: String,
     },
     phoneNo: {
       type: String,
-        unique: true,
+        
+    },
+    initialFigureCommision: {
+      type: String,
+        
+    }, 
+    forthFigureCommision: {
+      type: String,
+        
     },
   },
   { timestamps: true }
@@ -74,6 +82,7 @@ const bondSchema = new mongoose.Schema({
     bondType: { type: String },
     date: { type: Date },
     isDisable:{ type: Boolean },
+    userId:{type:String},       
     figures: {
         figure: { type: Number},
         first: { type: Number,},

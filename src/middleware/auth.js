@@ -50,11 +50,11 @@ const isAuthorized = async (req, res, next) => {
 
 
     const user = await UserModel.findOne({ email: email });
-    if (!user) {
-      return next(
-        apiError.badRequest(MESSEGES.USERNAME_NOT_FOUND, "isAuthorized")
-      );
-    }
+    // if (!user) {
+    //   return next(
+    //     apiError.badRequest(MESSEGES.USERNAME_NOT_FOUND, "isAuthorized")
+    //   );
+    // }
 
     req.userId = new mongoose.Types.ObjectId(user?._id);
     req.user = user;

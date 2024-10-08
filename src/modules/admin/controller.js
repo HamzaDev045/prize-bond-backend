@@ -3,6 +3,7 @@ import {
   validateSignInInputs,
   schema,
   purchaseSchema,
+  validateCreateUserInputs,
 } from "./validation.js";
 
 import {
@@ -72,17 +73,18 @@ export const signIn = async (req, res, next) => {
 
 export const createNewUser = async (req, res, next) => {
   try {
-    // const validationResult = validateSignUpInputs(req.body);
+    const validationResult = validateCreateUserInputs(req.body);
 
-    // if (validationResult?.error)
-    //   return next(apiError.badRequest(validationResult?.msg, "signUp"));
+    console.log(validationResult);
+        
+    if (validationResult?.error)
+      return next(apiError.badRequest(validationResult?.msg, "signUp"));
     const user = await createUser(
       {
         ...req.body,
       },
       next
     );
-    console.log("hello");
 
     if (!user)
       throw next(apiError.badRequest(MESSEGES.USER_CREATION_FAILED, "signup"));
@@ -116,6 +118,33 @@ export const deleteUser = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     return next(apiError.internal(error, "deleteUser"));
+  }
+};
+
+
+
+export const getOneUserDetail = async (req, res, next) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return next(apiError.badRequest(MESSEGES.USER_ID_REQUIRED, "updateUser"));
+  }
+
+  try {
+    let user = await getUserByConditions({ _id: userId }, "-__v");
+
+    if (!user) {
+      return next(
+        apiError.badRequest(MESSEGES.USER_DOES_NOT_EXIST, "updateUser")
+      );
+    }
+
+   
+
+    res.json({ message: "User updated successfully", data: user });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
   }
 };
 
@@ -216,7 +245,26 @@ export const getAllBonds = async (req, res, next) => {
     const bonds = await Bond.find();
     res.json({
       isSuccess: true,
-      message: "Bond Activated Sucessfuly",
+      message: "Bond Retrieved Sucessfuly",
+      data: bonds,
+    });
+  } catch (error) {
+    res.status(500).json({ isSuccess: false, message: error.message });
+  }
+};
+
+export const getUserBonds = async (req, res, next) => {
+  try {
+    const  userId  = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ isSuccess: false, message: "User ID is required." });
+    }
+
+    const bonds = await Bond.find({ userId: userId }); 
+    res.json({
+      isSuccess: true,
+      message: "Bonds retrieved successfully",
       data: bonds,
     });
   } catch (error) {
@@ -257,6 +305,8 @@ export const updateBond = async (req, res, next) => {
 };
 
 export const figures = async (req, res, next) => {
+
+
   const { error, value } = schema.validate(req.body);
 
   if (error) {
@@ -301,6 +351,7 @@ export const getFiguresByFigure = async (req, res, next) => {
   }
 };
 export const purchaseFigures = async (req, res) => {
+
   const { error, value } = purchaseSchema.validate(req.body);
 
   if (error) {
@@ -336,6 +387,7 @@ export const purchaseFigures = async (req, res) => {
 
     bond.figures.first -= firstAmount;
     bond.figures.second -= secondAmount;
+    bond.userId=userId
 
     user.balance -= totalCost;
 
@@ -363,10 +415,12 @@ export default {
   getAllBonds,
   signIn,
   createBond,
+  getOneUserDetail,
   createNewUser,
   updateUser,
   getUsers,
   figures,
   getFiguresByFigure,
   purchaseFigures,
+  getUserBonds
 };
