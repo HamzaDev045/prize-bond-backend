@@ -23,7 +23,7 @@ router
   .get(" /userBonds", isAuthorized,  controller.getUserBonds)
 
   .post("/create-figures", isAuthorized, isAdmin, controller.figures)
-  .get("/figures/:figure", isAuthorized, isAdmin, controller.getFiguresByFigure)
+  .get("/figures/:figure/:bondType", isAuthorized, isAdmin, controller.getFiguresByFigure)
   .post("/figures/purchase", isAuthorized, controller.purchaseFigures);
 
 

@@ -308,7 +308,6 @@ export const updateBond = async (req, res, next) => {
 //   if (error) {
 //     return res.status(400).send(error.details[0].message);
 //   }
-  
 
 //   try {
 //     const bond = new Bond(value);
@@ -323,25 +322,25 @@ export const updateBond = async (req, res, next) => {
 //   }
 // };
 
-
 export const figures = async (req, res, next) => {
   const { error, value } = schema.validate(req.body);
 
   if (error) {
     return res.status(400).send(error.details[0].message);
   }
-  
+
   const { figures } = value;
 
   try {
     const result = await Bond.updateMany(
       {},
-      { $push: { figures: { $each: figures } } } // Push all figures to each bond's figures array
+      { $set: { figures: figures } },
+      { multi: true }
     );
 
     res.status(200).send({
       message: "Figures added to all bonds successfully",
-      modifiedCount: result.modifiedCount, // Number of bonds updated
+      modifiedCount: result.modifiedCount,
     });
   } catch (err) {
     console.error("Error saving bond:", err);
@@ -350,10 +349,14 @@ export const figures = async (req, res, next) => {
 };
 
 export const getFiguresByFigure = async (req, res, next) => {
-  const { figure } = req.params;
+  const { bondType,figure } = req.params;
 
   try {
-    const bond = await Bond.findOne({ "figures.figure": figure });
+    const bond = await Bond.findOne({
+      bondType: bondType
+    });
+    console.log(bond , "bond");
+    
 
     if (!bond) {
       throw next(
@@ -361,11 +364,23 @@ export const getFiguresByFigure = async (req, res, next) => {
       );
     }
 
+    const bondObject = bond.toObject();
+    const figureLength = String(figure).length;
+    const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
+    console.log(foundFigure , "foundFigure");
+    
+    if (!foundFigure) {
+      return res.status(404).send({
+        message: "Figure not found in the bond"
+      });
+    }
+
     res.status(200).send({
       message: "Bond data retrieved successfully",
       data: {
-        first: bond.figures.first,
-        second: bond.figures.second,
+        figure: foundFigure.figure,
+        first: foundFigure.first,
+        second: foundFigure.second,
       },
     });
   } catch (err) {
@@ -373,6 +388,7 @@ export const getFiguresByFigure = async (req, res, next) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
 export const purchaseFigures = async (req, res) => {
   const { error, value } = purchaseSchema.validate(req.body);
 
