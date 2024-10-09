@@ -11,16 +11,18 @@ router
   // Users
   .post("/signin", controller.signIn)
   .post("/create-user", isAuthorized, isAdmin, controller.createNewUser)
-  .delete(" /delete-user/:id", isAuthorized, isAdmin, controller.deleteUser)
+  .delete("/delete-user/:id", isAuthorized, isAdmin, controller.deleteUser)
   .put("/update-user/:userId", isAuthorized, isAdmin, controller.updateUser)
   .get("/user/:userId", isAuthorized,  controller.getOneUserDetail)
   .get("/users", isAuthorized, isAdmin, controller.getUsers)
 
   // Bonds
   .post("/addBond", isAuthorized, isAdmin, controller.createBond)
-  .put(" /bonds/:id", isAuthorized, isAdmin, controller.updateBond)
-  .get(" /allBonds", isAuthorized, isAdmin, controller.getAllBonds)
-  .get(" /userBonds", isAuthorized,  controller.getUserBonds)
+  .put("/bonds/:id", isAuthorized, isAdmin, controller.updateBond)
+  .put("/bondstatus/:id", isAuthorized, isAdmin, controller.activateBond)
+
+  .get("/allBonds", isAuthorized, isAdmin, controller.getAllBonds)
+  .get("/userBonds", isAuthorized,  controller.getUserBonds)
 
   .post("/create-figures", isAuthorized, isAdmin, controller.figures)
   .get("/figures/:figure/:bondType", isAuthorized, isAdmin, controller.getFiguresByFigure)

@@ -355,8 +355,6 @@ export const getFiguresByFigure = async (req, res, next) => {
     const bond = await Bond.findOne({
       bondType: bondType
     });
-    console.log(bond , "bond");
-    
 
     if (!bond) {
       throw next(
