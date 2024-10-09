@@ -76,7 +76,7 @@ export const createNewUser = async (req, res, next) => {
     // const validationResult = validateCreateUserInputs(req.body);
 
     // console.log(validationResult);
-        
+
     // if (validationResult?.error)
     //   return next(apiError.badRequest(validationResult?.msg, "signUp"));
     const user = await createUser(
@@ -121,8 +121,6 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-
-
 export const getOneUserDetail = async (req, res, next) => {
   const { userId } = req.params;
 
@@ -138,8 +136,6 @@ export const getOneUserDetail = async (req, res, next) => {
         apiError.badRequest(MESSEGES.USER_DOES_NOT_EXIST, "updateUser")
       );
     }
-
-   
 
     res.json({ message: "User updated successfully", data: user });
   } catch (err) {
@@ -255,13 +251,15 @@ export const getAllBonds = async (req, res, next) => {
 
 export const getUserBonds = async (req, res, next) => {
   try {
-    const  userId  = req.userId;
+    const userId = req.userId;
 
     if (!userId) {
-      return res.status(400).json({ isSuccess: false, message: "User ID is required." });
+      return res
+        .status(400)
+        .json({ isSuccess: false, message: "User ID is required." });
     }
 
-    const bonds = await Bond.find({ userId: userId }); 
+    const bonds = await Bond.find({ userId: userId });
     res.json({
       isSuccess: true,
       message: "Bonds retrieved successfully",
@@ -304,21 +302,46 @@ export const updateBond = async (req, res, next) => {
   }
 };
 
+// export const figures = async (req, res, next) => {
+//   const { error, value } = schema.validate(req.body);
+
+//   if (error) {
+//     return res.status(400).send(error.details[0].message);
+//   }
+  
+
+//   try {
+//     const bond = new Bond(value);
+//     await bond.save();
+//     res.status(201).send({
+//       message: "Bond data saved successfully",
+//       data: bond,
+//     });
+//   } catch (err) {
+//     console.error("Error saving bond:", err);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+
+
 export const figures = async (req, res, next) => {
-
-
   const { error, value } = schema.validate(req.body);
 
   if (error) {
     return res.status(400).send(error.details[0].message);
   }
+  
+  const { figures } = value;
 
   try {
-    const bond = new Bond(value);
-    await bond.save();
-    res.status(201).send({
-      message: "Bond data saved successfully",
-      data: bond,
+    const result = await Bond.updateMany(
+      {},
+      { $push: { figures: { $each: figures } } } // Push all figures to each bond's figures array
+    );
+
+    res.status(200).send({
+      message: "Figures added to all bonds successfully",
+      modifiedCount: result.modifiedCount, // Number of bonds updated
     });
   } catch (err) {
     console.error("Error saving bond:", err);
@@ -351,7 +374,6 @@ export const getFiguresByFigure = async (req, res, next) => {
   }
 };
 export const purchaseFigures = async (req, res) => {
-
   const { error, value } = purchaseSchema.validate(req.body);
 
   if (error) {
@@ -387,7 +409,7 @@ export const purchaseFigures = async (req, res) => {
 
     bond.figures.first -= firstAmount;
     bond.figures.second -= secondAmount;
-    bond.userId=userId
+    bond.userId = userId;
 
     user.balance -= totalCost;
 
@@ -422,5 +444,5 @@ export default {
   figures,
   getFiguresByFigure,
   purchaseFigures,
-  getUserBonds
+  getUserBonds,
 };

@@ -32,12 +32,14 @@ export const validateSignInInputs = (data) => {
 }
 
 export const schema = Joi.object({
-    bondType: Joi.string().required(),
-    figures: Joi.object({
+    // bondType: Joi.string().required(),
+    figures: Joi.array().items(
+      Joi.object({
         figure: Joi.number().required(),
         first: Joi.number().required(),
         second: Joi.number().required()
-    }).required()
+      })
+    ).required()
 })
 export const purchaseSchema = Joi.object({
     figure: Joi.number().required(),
