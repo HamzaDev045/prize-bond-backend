@@ -73,12 +73,12 @@ export const signIn = async (req, res, next) => {
 
 export const createNewUser = async (req, res, next) => {
   try {
-    const validationResult = validateCreateUserInputs(req.body);
+    // const validationResult = validateCreateUserInputs(req.body);
 
-    console.log(validationResult);
+    // console.log(validationResult);
         
-    if (validationResult?.error)
-      return next(apiError.badRequest(validationResult?.msg, "signUp"));
+    // if (validationResult?.error)
+    //   return next(apiError.badRequest(validationResult?.msg, "signUp"));
     const user = await createUser(
       {
         ...req.body,
