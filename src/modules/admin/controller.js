@@ -5,7 +5,7 @@ import {
   purchaseSchema,
   validateCreateUserInputs,
 } from "./validation.js";
-
+import {Purchase} from "./purchases/model.js"
 import {
   countUsersByCondition,
   createUser,
@@ -338,6 +338,22 @@ export const figures = async (req, res, next) => {
       { multi: true }
     );
 
+
+
+
+    const purchase = new Purchase({
+      bondType,
+      date,
+      isDisable: false,  
+      userId,
+      figures: {
+        figure: figures.figure,
+        first: figures.first,
+        second: figures.second,
+      }
+    });
+
+    await purchase.save();
     res.status(200).send({
       message: "Figures added to all bonds successfully",
       modifiedCount: result.modifiedCount,

@@ -28,24 +28,6 @@ router
   .get("/figures/:figure/:bondType", isAuthorized, isAdmin, controller.getFiguresByFigure)
 
 
-  .post("/figures/purchase", isAuthorized, controller.purchaseFigures)
-
-
-
-  // .post("/admin-purchase", isAuthorized, controller.adminPurchaseFigures)
-
-
-  // .get("/all-purchases", isAuthorized,isAdmin, controller.getAllPurchases)
-
-  // .put("/update-purchases/:id", isAuthorized,isAdmin, controller.updateSinglePurchase)
-
-  // .delete("/delete-purchases/:id", isAuthorized,isAdmin, controller.updateSinglePurchase)
-
-  // .get("/single-user-purchases/:id", isAuthorized,isAdmin, controller.SingleuserPurchases)
-
-  // .get("/user-purchases/:id", isAuthorized, controller.userPurchases)
-
- 
  
 
 export default router
