@@ -419,7 +419,8 @@ export const figures = async (req, res, next) => {
       { multi: true }
     );
 
-    res.status(200).send({
+
+      res.status(200).send({
       message: "Figures added to all bonds successfully",
       modifiedCount: result.modifiedCount,
     });
@@ -467,78 +468,6 @@ export const getFiguresByFigure = async (req, res, next) => {
   }
 };
 
-export const purchaseFigures = async (req, res) => {
-  const { error, value } = purchaseSchema.validate(req.body);
-
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  }
-
-  const { figure, firstAmount, secondAmount } = value;
-
-  const userId = req.userId;
-  try {
-
-    const bond = await Bond.findOne({
-      bondType: bondType
-    });
-
-    if (!bond) {
-      throw next(
-        apiError.badRequest(MESSEGES.BOND_NOT_FOUND, "getFiguresByFigure")
-      );
-    }
-
-    const bondObject = bond.toObject();
-    const figureLength = String(figure).length;
-    const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
-    
-    
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-
-    // const bond = await Bond.findOne({ "figures.figure": figure });
-    // if (!bond) {
-    //   return res.status(404).send("Bond not found with the given figure");
-    // }
-
-    if (
-      firstAmount > foundFigure.first ||
-      secondAmount > foundFigure.second
-    ) {
-      return res.status(400).send("Requested amounts exceed available figures");
-    }
-
-    const totalCost = firstAmount + secondAmount;
-
-    if (totalCost > user.balance) {
-      return res.status(400).send("Insufficient balance");
-    }
-
-    foundFigure.first -= firstAmount;
-    foundFigure.second -= secondAmount;
-    bond.userId = userId;
-
-    user.balance -= totalCost;
-
-    await bond.save();
-    await user.save();
-
-    res.status(200).send({
-      isSucess: true,
-      message: " Bond Purchase successful",
-      data: {
-        bond: bond,
-        user: user,
-      },
-    });
-  } catch (err) {
-    console.error("Error processing purchase:", err);
-    res.status(500).send("Internal Server Error");
-  }
-};
 
 export default {
   updateBond,
@@ -553,6 +482,5 @@ export default {
   getUsers,
   figures,
   getFiguresByFigure,
-  purchaseFigures,
   getUserBonds,
 };

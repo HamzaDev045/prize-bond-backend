@@ -12,23 +12,20 @@ router
 
 
 // Purchases :=
-  .post("/figures/purchase", isAuthorized, controller.purchaseFigures)
+  .post("/figures/purchase", isAuthorized, controller.purchaseFigures)  //done tested
 
-  .get("/all-purchases", isAuthorized,isAdmin, controller.getAllPurchases)
+  .get("/all-purchases", isAuthorized,isAdmin, controller.getAllPurchases) //done tested
 
-  .get("/user-purchases/:id", isAuthorized, controller.userPurchases)
+  .get("/user-purchases/:userId", isAuthorized, controller.userPurchases) //done tested
 
-  .get("/single-user-purchases/:id", isAuthorized,isAdmin, controller.SingleuserPurchases)
+  .get("/single-user-purchases/:purchaseId", isAuthorized,isAdmin, controller.SingleuserPurchases) //done tested
 
-  .put("/update-purchases/:id", isAuthorized,isAdmin, controller.updateSinglePurchase)
-
-
-  .post("/admin-purchase", isAuthorized, controller.adminPurchaseFigures)
+  .put("/update-purchases/:purchaseId", isAuthorized,isAdmin, controller.updateSinglePurchase) //done tested
 
 
+  .post("/admin-purchase/:userId", isAuthorized, controller.adminPurchaseFigures)  //done tested
 
-
-  .delete("/delete-purchases/:id", isAuthorized,isAdmin, controller.deleteSinglePurchase)
+  .delete("/delete-purchases/:purchaseId", isAuthorized,isAdmin, controller.deleteSinglePurchase) //done tested
 
  
 
