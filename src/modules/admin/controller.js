@@ -322,6 +322,87 @@ export const updateBond = async (req, res, next) => {
 //   }
 // };
 
+// export const figures = async (req, res, next) => {
+//   const { error, value } = schema.validate(req.body);
+
+//   if (error) {
+//     return res.status(400).send(error.details[0].message);
+//   }
+
+//   const { figures } = value;
+
+//   try {
+//     const result = await Bond.updateMany(
+//       {},
+//       { $set: { figures: figures } },
+//       { multi: true }
+//     );
+
+
+
+
+//     const purchase = new Purchase({
+//       bondType,
+//       date,
+//       isDisable: false,  
+//       userId,
+//       figures: {
+//         figure: figures.figure,
+//         first: figures.first,
+//         second: figures.second,
+//       }
+//     });
+
+//     await purchase.save();
+//     res.status(200).send({
+//       message: "Figures added to all bonds successfully",
+//       modifiedCount: result.modifiedCount,
+//     });
+//   } catch (err) {
+//     console.error("Error saving bond:", err);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+
+// export const getFiguresByFigure = async (req, res, next) => {
+//   const { bondType,figure } = req.params;
+
+//   try {
+//     const bond = await Bond.findOne({
+//       bondType: bondType
+//     });
+
+//     if (!bond) {
+//       throw next(
+//         apiError.badRequest(MESSEGES.BOND_NOT_FOUND, "getFiguresByFigure")
+//       );
+//     }
+
+//     const bondObject = bond.toObject();
+//     const figureLength = String(figure).length;
+//     const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
+//     console.log(foundFigure , "foundFigure");
+    
+//     if (!foundFigure) {
+//       return res.status(404).send({
+//         message: "Figure not found in the bond"
+//       });
+//     }
+
+//     res.status(200).send({
+//       message: "Bond data retrieved successfully",
+//       data: {
+//         figure: foundFigure.figure,
+//         first: foundFigure.first,
+//         second: foundFigure.second,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error retrieving bond:", err);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+
 export const figures = async (req, res, next) => {
   const { error, value } = schema.validate(req.body);
 
@@ -338,22 +419,6 @@ export const figures = async (req, res, next) => {
       { multi: true }
     );
 
-
-
-
-    const purchase = new Purchase({
-      bondType,
-      date,
-      isDisable: false,  
-      userId,
-      figures: {
-        figure: figures.figure,
-        first: figures.first,
-        second: figures.second,
-      }
-    });
-
-    await purchase.save();
     res.status(200).send({
       message: "Figures added to all bonds successfully",
       modifiedCount: result.modifiedCount,
@@ -381,7 +446,6 @@ export const getFiguresByFigure = async (req, res, next) => {
     const bondObject = bond.toObject();
     const figureLength = String(figure).length;
     const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
-    console.log(foundFigure , "foundFigure");
     
     if (!foundFigure) {
       return res.status(404).send({
@@ -414,19 +478,35 @@ export const purchaseFigures = async (req, res) => {
 
   const userId = req.userId;
   try {
+
+    const bond = await Bond.findOne({
+      bondType: bondType
+    });
+
+    if (!bond) {
+      throw next(
+        apiError.badRequest(MESSEGES.BOND_NOT_FOUND, "getFiguresByFigure")
+      );
+    }
+
+    const bondObject = bond.toObject();
+    const figureLength = String(figure).length;
+    const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
+    
+    
     const user = await UserModel.findById(userId);
     if (!user) {
       return res.status(404).send("User not found");
     }
 
-    const bond = await Bond.findOne({ "figures.figure": figure });
-    if (!bond) {
-      return res.status(404).send("Bond not found with the given figure");
-    }
+    // const bond = await Bond.findOne({ "figures.figure": figure });
+    // if (!bond) {
+    //   return res.status(404).send("Bond not found with the given figure");
+    // }
 
     if (
-      firstAmount > bond.figures.first ||
-      secondAmount > bond.figures.second
+      firstAmount > foundFigure.first ||
+      secondAmount > foundFigure.second
     ) {
       return res.status(400).send("Requested amounts exceed available figures");
     }
@@ -437,8 +517,8 @@ export const purchaseFigures = async (req, res) => {
       return res.status(400).send("Insufficient balance");
     }
 
-    bond.figures.first -= firstAmount;
-    bond.figures.second -= secondAmount;
+    foundFigure.first -= firstAmount;
+    foundFigure.second -= secondAmount;
     bond.userId = userId;
 
     user.balance -= totalCost;
