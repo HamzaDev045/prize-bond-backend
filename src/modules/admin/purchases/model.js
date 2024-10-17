@@ -7,6 +7,7 @@ const purchaseSchema = new mongoose.Schema({
         first: { type: Number},
         second: { type: Number },
     },
+    bondType:{type:String},
     isNormal: { type: Boolean, default: true }, 
 });
 export const Purchase = mongoose.model('Purchase', purchaseSchema);

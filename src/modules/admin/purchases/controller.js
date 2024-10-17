@@ -7,7 +7,6 @@ import { Purchase } from "./model.js";
 export const purchaseFigures = async (req, res) => {
   const { bondType, figure, firstAmount, secondAmount } = req.body;
   const userId = req.userId;
-
   try {
     const bond = await Bond.findOne({ bondType: bondType });
 
@@ -23,7 +22,6 @@ export const purchaseFigures = async (req, res) => {
     const bondObject = bond.toObject();
 
     const figureLength = String(figure).length;
-
 
     const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
 
@@ -44,11 +42,7 @@ export const purchaseFigures = async (req, res) => {
     const newFirstValue = foundFigure.first - firstAmount;
     const newSecondValue = foundFigure.second - secondAmount;
 
-
-
-
     const indexToUpdate = figureLength - 1
-
 
     bondObject.figures[indexToUpdate].first = newFirstValue
     bondObject.figures[indexToUpdate].second = newSecondValue
@@ -61,13 +55,12 @@ export const purchaseFigures = async (req, res) => {
 
     const updatedBond = await Bond.findOne({ bondType: bondType });
 
-
     const newPurchase = new Purchase({
       userId: userId,
-      figures: foundFigure,
+      bondType:bondType,
+      figures: {figure :figure , first:firstAmount  , second: secondAmount},
       isNormal: false
     });
-
 
     user.balance -= totalCost;
     await newPurchase.save();
