@@ -123,21 +123,20 @@ export const deleteUser = async (req, res, next) => {
 
 export const getOneUserDetail = async (req, res, next) => {
   const { userId } = req.params;
-
   if (!userId) {
     return next(apiError.badRequest(MESSEGES.USER_ID_REQUIRED, "updateUser"));
   }
-
   try {
     let user = await getUserByConditions({ _id: userId }, "-__v");
-
     if (!user) {
       return next(
         apiError.badRequest(MESSEGES.USER_DOES_NOT_EXIST, "updateUser")
       );
     }
 
-    res.json({ message: "User updated successfully", data: user });
+    const {password , ...userData} = user.toObject()
+
+    res.json({ message: "User updated successfully", data: userData });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
@@ -250,19 +249,30 @@ export const getAllBonds = async (req, res, next) => {
 };
 
 export const getUserBonds = async (req, res, next) => {
+  // try {
+  //   const userId = req.userId;
+
+  //   if (!userId) {
+  //     return res
+  //       .status(400)
+  //       .json({ isSuccess: false, message: "User ID is required." });
+  //   }
+
+  //   const bonds = await Bond.find({ userId: userId });
+  //   res.json({
+  //     isSuccess: true,
+  //     message: "Bonds retrieved successfully",
+  //     data: bonds,
+  //   });
+  // } catch (error) {
+  //   res.status(500).json({ isSuccess: false, message: error.message });
+  // }
+
   try {
-    const userId = req.userId;
-
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ isSuccess: false, message: "User ID is required." });
-    }
-
-    const bonds = await Bond.find({ userId: userId });
+    const bonds = await Bond.find();
     res.json({
       isSuccess: true,
-      message: "Bonds retrieved successfully",
+      message: "Bond Retrieved Sucessfuly",
       data: bonds,
     });
   } catch (error) {

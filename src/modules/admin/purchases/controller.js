@@ -33,7 +33,8 @@ export const purchaseFigures = async (req, res) => {
       return res.status(400).json("Requested amounts exceed available figures");
     }
 
-    const totalCost = firstAmount + secondAmount;
+    const totalCost =  Number(firstAmount) + Number(secondAmount);
+
 
     if (totalCost > user.balance) {
       return res.status(400).json("Insufficient balance");
@@ -59,7 +60,7 @@ export const purchaseFigures = async (req, res) => {
       userId: userId,
       bondType:bondType,
       figures: {figure :figure , first:firstAmount  , second: secondAmount},
-      isNormal: false
+      isNormal: true
     });
 
     user.balance -= totalCost;
@@ -293,9 +294,8 @@ export const adminPurchaseFigures = async (req, res) => {
     if (firstAmount > foundFigure.first || secondAmount > foundFigure.second) {
       return res.status(400).json("Requested amounts exceed available figures");
     }
-
-    const totalCost = firstAmount + secondAmount;
-
+    
+    const totalCost =  Number(firstAmount) + Number(secondAmount);
     if (totalCost > user.balance) {
       return res.status(400).json("Insufficient balance");
     }
@@ -321,7 +321,7 @@ export const adminPurchaseFigures = async (req, res) => {
     const newPurchase = new Purchase({
       userId: userId,
       figures: foundFigure,
-      isNormal: true
+      isNormal: false
     });
 
 
