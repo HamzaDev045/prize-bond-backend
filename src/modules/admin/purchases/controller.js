@@ -466,6 +466,94 @@ export const adminPurchaseFigures = async (req, res) => {
   }
 };
 
+export const processBondFigures = async (req, res) => {
+  const { bondType, figures } = req.body;
+
+  try {
+    const users = await Purchase.find({ bondType: bondType });
+
+    if (!users.length) {
+      return res.status(404).json("No users found for this bond type");
+    }
+
+    const response = [];
+
+    for (const { figure, first, second } of figures) {
+      const figureLength = String(figure).length;
+
+      let multiplier;
+      if (figureLength === 1) {
+        multiplier = 7;
+      } else if (figureLength === 2) {
+        multiplier = 70;
+      } else if (figureLength === 3) {
+        multiplier = 700;
+      } else if (figureLength === 4) {
+        multiplier = 5000;
+      } else {
+        continue; 
+      }
+
+      for (const user of users) {
+        const userFigures = Array.isArray(user.figures) ? user.figures : [user.figures];
+
+        const userFigure = userFigures.find(f => f.figure === figure);
+
+ const totalPurchases = userFigures.reduce((acc, fig) => {
+  return acc + (fig.first || 0) + (fig.second || 0);
+}, 0);
+
+        if (userFigure) {
+          const updatedValues = {
+            first: userFigure.first, 
+            second: userFigure.second
+          };
+
+          if (first) {
+            updatedValues.first = userFigure.first * multiplier;
+          }
+          if (second) {
+            updatedValues.second = userFigure.second * multiplier;
+          }
+
+          
+          // await Purchase.updateOne(
+          //   { userId: user.userId, "figures.figure": figure },
+          //   { 
+          //     $set: { 
+          //       "figures.$.first": updatedValues.first,
+          //       "figures.$.second": updatedValues.second
+          //     }
+          //   }
+          // );
+
+          response.push({
+            userId: user.userId,
+            bondType: bondType,
+            originalFigure: figure,
+            updatedFirst: first ? updatedValues.first : null,
+            updatedSecond: second ? updatedValues.second : null,
+            totalPurchases: totalPurchases,
+            multiplier: multiplier,
+          });
+        }
+      }
+    }
+
+    res.status(200).json({
+      isSuccess: true,
+      message: "Users found and figures processed successfully",
+      data: response,
+    });
+  } catch (error) {
+    console.error("Error processing bond figures:", error);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+
+
+
 
 
 export default {
@@ -475,6 +563,7 @@ export default {
   SingleuserPurchases,
   updateSinglePurchase,
   deleteSinglePurchase,
-  adminPurchaseFigures
+  adminPurchaseFigures,
+  processBondFigures
 
 };
