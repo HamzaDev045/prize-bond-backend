@@ -16,6 +16,10 @@ router
   .get("/user/:userId", isAuthorized,  controller.getOneUserDetail)
   .get("/users", isAuthorized, isAdmin, controller.getUsers)
 
+
+  .post("/add-winningNumbers", isAuthorized, isAdmin, controller.addPriceNumbers)
+
+
   // Bonds
   .post("/addBond", isAuthorized, isAdmin, controller.createBond)
   .put("/bonds/:id", isAuthorized, isAdmin, controller.updateBond)

@@ -1,8 +1,5 @@
-
-import { Bond, UserModel } from "../model.js"
+import { Bond, UserModel, priceNumber } from "../model.js";
 import { Purchase } from "./model.js";
-
-
 
 export const purchaseFigures = async (req, res) => {
   const { bondType, figure, firstAmount, secondAmount } = req.body;
@@ -23,7 +20,9 @@ export const purchaseFigures = async (req, res) => {
 
     const figureLength = String(figure).length;
 
-    const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
+    const foundFigure = bondObject.figures.find(
+      (f) => String(f.figure).length === figureLength
+    );
 
     if (!foundFigure) {
       return res.status(404).json("Figure not found");
@@ -33,8 +32,7 @@ export const purchaseFigures = async (req, res) => {
       return res.status(400).json("Requested amounts exceed available figures");
     }
 
-    const totalCost =  Number(firstAmount) + Number(secondAmount);
-
+    const totalCost = Number(firstAmount) + Number(secondAmount);
 
     if (totalCost > user.balance) {
       return res.status(400).json("Insufficient balance");
@@ -43,30 +41,25 @@ export const purchaseFigures = async (req, res) => {
     const newFirstValue = foundFigure.first - firstAmount;
     const newSecondValue = foundFigure.second - secondAmount;
 
-    const indexToUpdate = figureLength - 1
+    const indexToUpdate = figureLength - 1;
 
-    bondObject.figures[indexToUpdate].first = newFirstValue
-    bondObject.figures[indexToUpdate].second = newSecondValue
+    bondObject.figures[indexToUpdate].first = newFirstValue;
+    bondObject.figures[indexToUpdate].second = newSecondValue;
 
-
- await Bond.updateOne(
-      { bondType: bondType },
-      { $set: bondObject }
-    );
+    await Bond.updateOne({ bondType: bondType }, { $set: bondObject });
 
     const updatedBond = await Bond.findOne({ bondType: bondType });
 
     const newPurchase = new Purchase({
       userId: userId,
-      bondType:bondType,
-      figures: {figure :figure , first:firstAmount  , second: secondAmount},
-      isNormal: true
+      bondType: bondType,
+      figures: { figure: figure, first: firstAmount, second: secondAmount },
+      isNormal: true,
     });
 
     user.balance -= totalCost;
     await newPurchase.save();
     await user.save();
-
 
     res.status(200).json({
       isSuccess: true,
@@ -135,8 +128,6 @@ export const userPurchases = async (req, res) => {
   }
 };
 
-
-
 export const SingleuserPurchases = async (req, res) => {
   try {
     const { purchaseId } = req.params;
@@ -171,8 +162,6 @@ export const SingleuserPurchases = async (req, res) => {
   }
 };
 
-
-
 export const updateSinglePurchase = async (req, res) => {
   try {
     const { purchaseId } = req.params;
@@ -188,7 +177,8 @@ export const updateSinglePurchase = async (req, res) => {
     if (!figure && !firstAmount && !secondAmount) {
       return res.status(400).json({
         isSuccess: false,
-        message: "At least one field (figure, firstAmount, secondAmount) must be provided for update.",
+        message:
+          "At least one field (figure, firstAmount, secondAmount) must be provided for update.",
       });
     }
 
@@ -221,7 +211,9 @@ export const updateSinglePurchase = async (req, res) => {
     const bondObject = bond.toObject();
     const figureLength = String(purchase.figures.figure).length;
 
-    const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
+    const foundFigure = bondObject.figures.find(
+      (f) => String(f.figure).length === figureLength
+    );
 
     if (!foundFigure) {
       return res.status(404).json({
@@ -230,8 +222,10 @@ export const updateSinglePurchase = async (req, res) => {
       });
     }
 
-    const firstDifference = firstAmount !== undefined ? firstAmount - purchase.figures.first : 0;
-    const secondDifference = secondAmount !== undefined ? secondAmount - purchase.figures.second : 0;
+    const firstDifference =
+      firstAmount !== undefined ? firstAmount - purchase.figures.first : 0;
+    const secondDifference =
+      secondAmount !== undefined ? secondAmount - purchase.figures.second : 0;
 
     const totalDifference = firstDifference + secondDifference;
 
@@ -239,7 +233,8 @@ export const updateSinglePurchase = async (req, res) => {
       if (totalDifference > user.balance) {
         return res.status(400).json({
           isSuccess: false,
-          message: "User does not have enough balance to cover the additional cost.",
+          message:
+            "User does not have enough balance to cover the additional cost.",
         });
       }
       user.balance -= totalDifference;
@@ -251,20 +246,17 @@ export const updateSinglePurchase = async (req, res) => {
       foundFigure.first += -firstDifference;
     }
     if (secondAmount !== undefined) {
-      foundFigure.second += -secondDifference; 
+      foundFigure.second += -secondDifference;
     }
 
     await user.save();
 
-    await Bond.updateOne(
-      { bondType: purchase.bondType },
-      { $set: bondObject }
-    );
+    await Bond.updateOne({ bondType: purchase.bondType }, { $set: bondObject });
 
     const updateData = {
-      ...(figure !== undefined && { 'figures.figure': figure }),
-      ...(firstAmount !== undefined && { 'figures.first': firstAmount }),
-      ...(secondAmount !== undefined && { 'figures.second': secondAmount }),
+      ...(figure !== undefined && { "figures.figure": figure }),
+      ...(firstAmount !== undefined && { "figures.first": firstAmount }),
+      ...(secondAmount !== undefined && { "figures.second": secondAmount }),
     };
 
     const updatedPurchase = await Purchase.findByIdAndUpdate(
@@ -295,8 +287,6 @@ export const updateSinglePurchase = async (req, res) => {
   }
 };
 
-
-
 export const deleteSinglePurchase = async (req, res) => {
   try {
     const { purchaseId } = req.params;
@@ -308,9 +298,7 @@ export const deleteSinglePurchase = async (req, res) => {
       });
     }
 
-
     const purchase = await Purchase.findById(purchaseId);
-
 
     const user = await UserModel.findById(purchase.userId);
 
@@ -321,46 +309,42 @@ export const deleteSinglePurchase = async (req, res) => {
       });
     }
 
-    const refundAmount = purchase.figures.first+purchase.figures.second; 
-    
+    const refundAmount = purchase.figures.first + purchase.figures.second;
 
-    
-    user.balance += refundAmount; 
-    await user.save()
+    user.balance += refundAmount;
+    await user.save();
 
-     const bond = await Bond.findOne({ bondType: purchase.bondType });
+    const bond = await Bond.findOne({ bondType: purchase.bondType });
 
-     if (!bond) {
-       return res.status(404).json({
-         isSuccess: false,
-         message: "Bond not found associated with this purchase.",
-       });
-     }
- 
-     const bondObject = bond.toObject();
-     const figureLength = String(purchase.figures.figure).length;
- 
-     const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
-     
-     if (!foundFigure) {
-       return res.status(404).json({
-         isSuccess: false,
-         message: "Figure not found in the bond.",
-       });
-     }
- 
-     // Re-add the 'first' and 'second' values back to the bond
-     foundFigure.first += purchase.figures.first; // add back the 'first' value
-     foundFigure.second += purchase.figures.second; // add back the 'second' value
- 
-     // Update the bond with the re-added values
-     await Bond.updateOne(
-       { bondType: purchase.bondType },
-       { $set: bondObject }
-     );
+    if (!bond) {
+      return res.status(404).json({
+        isSuccess: false,
+        message: "Bond not found associated with this purchase.",
+      });
+    }
+
+    const bondObject = bond.toObject();
+    const figureLength = String(purchase.figures.figure).length;
+
+    const foundFigure = bondObject.figures.find(
+      (f) => String(f.figure).length === figureLength
+    );
+
+    if (!foundFigure) {
+      return res.status(404).json({
+        isSuccess: false,
+        message: "Figure not found in the bond.",
+      });
+    }
+
+    // Re-add the 'first' and 'second' values back to the bond
+    foundFigure.first += purchase.figures.first; // add back the 'first' value
+    foundFigure.second += purchase.figures.second; // add back the 'second' value
+
+    // Update the bond with the re-added values
+    await Bond.updateOne({ bondType: purchase.bondType }, { $set: bondObject });
 
     const deletedPurchase = await Purchase.findByIdAndDelete(purchaseId);
-      
 
     if (!deletedPurchase) {
       return res.status(404).json({
@@ -383,12 +367,10 @@ export const deleteSinglePurchase = async (req, res) => {
   }
 };
 
-
 export const adminPurchaseFigures = async (req, res) => {
+  const { bondType, figure, firstAmount, secondAmount } = req.body;
 
-  const {bondType, figure, firstAmount, secondAmount } = req.body;
-
-  const { userId } = req.params
+  const { userId } = req.params;
 
   try {
     const bond = await Bond.findOne({ bondType: bondType });
@@ -406,8 +388,9 @@ export const adminPurchaseFigures = async (req, res) => {
 
     const figureLength = String(figure).length;
 
-
-    const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
+    const foundFigure = bondObject.figures.find(
+      (f) => String(f.figure).length === figureLength
+    );
 
     if (!foundFigure) {
       return res.status(404).json("Figure not found");
@@ -416,8 +399,8 @@ export const adminPurchaseFigures = async (req, res) => {
     if (firstAmount > foundFigure.first || secondAmount > foundFigure.second) {
       return res.status(400).json("Requested amounts exceed available figures");
     }
-    
-    const totalCost =  Number(firstAmount) + Number(secondAmount);
+
+    const totalCost = Number(firstAmount) + Number(secondAmount);
     if (totalCost > user.balance) {
       return res.status(400).json("Insufficient balance");
     }
@@ -425,32 +408,24 @@ export const adminPurchaseFigures = async (req, res) => {
     const newFirstValue = foundFigure.first - firstAmount;
     const newSecondValue = foundFigure.second - secondAmount;
 
-    const indexToUpdate = figureLength - 1
+    const indexToUpdate = figureLength - 1;
 
+    bondObject.figures[indexToUpdate].first = newFirstValue;
+    bondObject.figures[indexToUpdate].second = newSecondValue;
 
-    bondObject.figures[indexToUpdate].first = newFirstValue
-    bondObject.figures[indexToUpdate].second = newSecondValue
-
-
- await Bond.updateOne(
-      { bondType: bondType },
-      { $set: bondObject }
-    );
+    await Bond.updateOne({ bondType: bondType }, { $set: bondObject });
 
     const updatedBond = await Bond.findOne({ bondType: bondType });
-
 
     const newPurchase = new Purchase({
       userId: userId,
       figures: foundFigure,
-      isNormal: false
+      isNormal: false,
     });
-
 
     user.balance -= totalCost;
     await newPurchase.save();
     await user.save();
-
 
     res.status(200).json({
       isSuccess: true,
@@ -466,95 +441,285 @@ export const adminPurchaseFigures = async (req, res) => {
   }
 };
 
+// export const processBondFigures = async (req, res) => {
+//   const { bondType,userId } = req.body;
+
+//   try {
+//     const purchasesData = await Purchase.find({ bondType: bondType , userId}).populate("userId");
+//     const user = await UserModel.findOne({_id:userId})
+//   const win = {figure:123 , inam:"second"}
+//     const results = {
+//       normal: {
+//         total: 0,
+//         commission: 0,
+//         remain: 0
+//       }
+//     };
+//     // Function to calculate commission and remaining value
+//     function calculateCommissionAndRemain(total, figureLength) {
+//       let commissionRate = 0;
+//       if (figureLength === 1 || figureLength === 2 || figureLength === 3) {
+//         commissionRate = user?.initialFigureCommision / 100;
+//       } else if (figureLength === 4) {
+//         commissionRate = user?.forthFigureCommision / 100;
+//       }
+
+//       const commission = total * commissionRate;
+//       const remain = total - commission;
+
+//       return { commission, remain };
+//     }
+//     // Process each bond in the data
+//     purchasesData.forEach(bond => {
+//       const total = bond.figures.first + bond.figures.second;
+//       const figureLength = bond.figures.figure.toString().length;
+//       const { commission, remain } = calculateCommissionAndRemain(total, figureLength);
+
+//         results.normal.total += total;
+//         results.normal.commission += commission;
+//         results.normal.remain += remain;
+//     });
+
+//     const figure = purchasesData?.find((item)=>item?.figures?.figure === win?.figure)
+// let totalPrize
+//   if(figure){
+//    const figureType =  figure?.figures?.figure?.toString().length
+//    console.log(figureType, 'figureType')
+//    switch (figureType) {
+//     case 1:
+//     if(win?.inam === "first"){
+//     totalPrize =  figure?.figures?.first * 7
+//     }else if (win?.inam === "second"){
+//       if(bondType === "GTL" || bondType === "PB:200"){
+//         totalPrize =  (figure?.figures?.second * 7 ) / 5
+//       }else
+//       totalPrize =  (figure?.figures?.second * 7 ) / 3
+//     }
+//       break;
+//       case 2:
+//         if(win?.inam === "first"){
+//           totalPrize =  figure?.figures?.first * 70
+//           }else if (win?.inam === "second"){
+//             if(bondType === "GTL" || bondType === "PB:200"){
+//               totalPrize =  (figure?.figures?.second * 70 ) / 5
+//             }else
+//             totalPrize =  (figure?.figures?.second * 70 ) / 3
+//           }
+//       break;
+//       case 3:
+//         if(win?.inam === "first"){
+//           totalPrize =  figure?.figures?.first * 700
+//           }else if (win?.inam === "second"){
+//             if(bondType === "GTL" || bondType === "PB:200"){
+//               totalPrize =  (figure?.figures?.second * 700) / 5
+//             }else
+//             totalPrize =  (figure?.figures?.second * 700 ) / 3
+//           }
+//       break;
+//       case 4:
+//         if(win?.inam === "first"){
+//           totalPrize =  figure?.figures?.first * 5000
+//           }else if (win?.inam === "second"){
+//             if(bondType === "GTL" || bondType === "PB:200"){
+//               totalPrize =  (figure?.figures?.second * 5000) / 5
+//             }else
+//             totalPrize =  (figure?.figures?.second * 5000 ) / 3
+//           }
+//       break;
+//     default:
+//       break;
+//    }
+
+//     // calculation
+//   }
+
+//     // prizes (inam)
+//     return res.send({results ,totalPrize})
+
+//     const response = [];
+
+//     for (const { figure, first, second } of figures) {
+//       const figureLength = String(figure).length;
+
+//       let multiplier;
+//       if (figureLength === 1) {
+//         multiplier = 7;
+//       } else if (figureLength === 2) {
+//         multiplier = 70;
+//       } else if (figureLength === 3) {
+//         multiplier = 700;
+//       } else if (figureLength === 4) {
+//         multiplier = 5000;
+//       } else {
+//         continue;
+//       }
+
+//       for (const user of users) {
+//         const userFigures = Array.isArray(user.figures) ? user.figures : [user.figures];
+
+//         const userFigure = userFigures.find(f => f.figure === figure);
+
+//  const totalPurchases = userFigures.reduce((acc, fig) => {
+//   return acc + (fig.first || 0) + (fig.second || 0);
+// }, 0);
+
+//         if (userFigure) {
+//           const updatedValues = {
+//             first: userFigure.first,
+//             second: userFigure.second
+//           };
+
+//           if (first) {
+//             updatedValues.first = userFigure.first * multiplier;
+//           }
+//           if (second) {
+//             updatedValues.second = userFigure.second * multiplier;
+//           }
+
+//           // await Purchase.updateOne(
+//           //   { userId: user.userId, "figures.figure": figure },
+//           //   {
+//           //     $set: {
+//           //       "figures.$.first": updatedValues.first,
+//           //       "figures.$.second": updatedValues.second
+//           //     }
+//           //   }
+//           // );
+
+//           response.push({
+//             userId: user.userId,
+//             bondType: bondType,
+//             originalFigure: figure,
+//             updatedFirst: first ? updatedValues.first : null,
+//             updatedSecond: second ? updatedValues.second : null,
+//             totalPurchases: totalPurchases,
+//             multiplier: multiplier,
+//           });
+//         }
+//       }
+//     }
+
+//     res.status(200).json({
+//       isSuccess: true,
+//       message: "Users found and figures processed successfully",
+//       data: response,
+//     });
+//   } catch (error) {
+//     console.error("Error processing bond figures:", error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
+
 export const processBondFigures = async (req, res) => {
-  const { bondType, figures } = req.body;
+  const { bondType, userId } = req.body;
 
   try {
-    const users = await Purchase.find({ bondType: bondType });
+    const purchasesData = await Purchase.find({
+      bondType: bondType,
+      userId,
+    }).populate("userId");
+    const user = await UserModel.findOne({ _id: userId });
+    const numberdata = await priceNumber.findOne({ bondType: bondType });
+    const winArray = numberdata?.numbers;
+    const results = {
+      normal: {
+        total: 0,
+        commission: 0,
+        remain: 0,
+      },
+    };
 
-    if (!users.length) {
-      return res.status(404).json("No users found for this bond type");
-    }
-
-    const response = [];
-
-    for (const { figure, first, second } of figures) {
-      const figureLength = String(figure).length;
-
-      let multiplier;
-      if (figureLength === 1) {
-        multiplier = 7;
-      } else if (figureLength === 2) {
-        multiplier = 70;
-      } else if (figureLength === 3) {
-        multiplier = 700;
+    function calculateCommissionAndRemain(total, figureLength) {
+      let commissionRate = 0;
+      if (figureLength === 1 || figureLength === 2 || figureLength === 3) {
+        commissionRate = user?.initialFigureCommision / 100;
       } else if (figureLength === 4) {
-        multiplier = 5000;
-      } else {
-        continue; 
+        commissionRate = user?.forthFigureCommision / 100;
       }
 
-      for (const user of users) {
-        const userFigures = Array.isArray(user.figures) ? user.figures : [user.figures];
+      const commission = total * commissionRate;
+      const remain = total - commission;
 
-        const userFigure = userFigures.find(f => f.figure === figure);
-
- const totalPurchases = userFigures.reduce((acc, fig) => {
-  return acc + (fig.first || 0) + (fig.second || 0);
-}, 0);
-
-        if (userFigure) {
-          const updatedValues = {
-            first: userFigure.first, 
-            second: userFigure.second
-          };
-
-          if (first) {
-            updatedValues.first = userFigure.first * multiplier;
-          }
-          if (second) {
-            updatedValues.second = userFigure.second * multiplier;
-          }
-
-          
-          // await Purchase.updateOne(
-          //   { userId: user.userId, "figures.figure": figure },
-          //   { 
-          //     $set: { 
-          //       "figures.$.first": updatedValues.first,
-          //       "figures.$.second": updatedValues.second
-          //     }
-          //   }
-          // );
-
-          response.push({
-            userId: user.userId,
-            bondType: bondType,
-            originalFigure: figure,
-            updatedFirst: first ? updatedValues.first : null,
-            updatedSecond: second ? updatedValues.second : null,
-            totalPurchases: totalPurchases,
-            multiplier: multiplier,
-          });
-        }
-      }
+      return { commission, remain };
     }
 
-    res.status(200).json({
-      isSuccess: true,
-      message: "Users found and figures processed successfully",
-      data: response,
+    // Process each bond in the data
+    purchasesData.forEach((bond) => {
+      const total = bond.figures.first + bond.figures.second;
+      const figureLength = bond.figures.figure.toString().length;
+      const { commission, remain } = calculateCommissionAndRemain(
+        total,
+        figureLength
+      );
+
+      results.normal.total += total;
+      results.normal.commission += commission;
+      results.normal.remain += remain;
+    });
+
+    let totalPrize = 0;
+    // let winningFigure=[null]
+
+    winArray.forEach((win) => {
+      const matchingFigure = purchasesData.find(
+        (item) => item?.figures?.figure === win?.figure
+      );
+
+      if (matchingFigure) {
+        // winningFigure = [...winningFigure ,matchingFigure ]
+        const figureType = matchingFigure?.figures?.figure?.toString().length;
+
+        let prize = 0;
+
+        switch (figureType) {
+          case 1:
+            prize =
+              win?.inam === "first"
+                ? matchingFigure?.figures?.first * 7
+                : (matchingFigure?.figures?.second * 7) /
+                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+            break;
+          case 2:
+            prize =
+              win?.inam === "first"
+                ? matchingFigure?.figures?.first * 70
+                : (matchingFigure?.figures?.second * 70) /
+                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+            break;
+          case 3:
+            prize =
+              win?.inam === "first"
+                ? matchingFigure?.figures?.first * 700
+                : (matchingFigure?.figures?.second * 700) /
+                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+            break;
+          case 4:
+            prize =
+              win?.inam === "first"
+                ? matchingFigure?.figures?.first * 5000
+                : (matchingFigure?.figures?.second * 5000) /
+                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+            break;
+          default:
+            break;
+        }
+
+        totalPrize += prize;
+      }
+    });
+
+    return res.send({
+      totalPurchasedAmount: results?.normal?.total,
+      PurchasedAmountCommission: results?.normal?.commission,
+      purchasedAmountRemaning: results?.normal?.remain,
+      totalPrize,
+      overAll: totalPrize - results?.normal?.remain,
     });
   } catch (error) {
     console.error("Error processing bond figures:", error);
     res.status(500).json("Internal Server Error");
   }
 };
-
-
-
-
-
 
 export default {
   purchaseFigures,
@@ -564,6 +729,5 @@ export default {
   updateSinglePurchase,
   deleteSinglePurchase,
   adminPurchaseFigures,
-  processBondFigures
-
+  processBondFigures,
 };

@@ -5,7 +5,7 @@ import {
   purchaseSchema,
   validateCreateUserInputs,
 } from "./validation.js";
-import {Purchase} from "./purchases/model.js"
+import { Purchase } from "./purchases/model.js";
 import {
   countUsersByCondition,
   createUser,
@@ -20,7 +20,7 @@ import {
   generateRefreshToken,
 } from "../../utils/index.js";
 import { MESSEGES } from "../../constants/index.js";
-import { Bond, UserModel } from "./model.js";
+import { Bond, UserModel ,priceNumber } from "./model.js";
 
 export const signIn = async (req, res, next) => {
   try {
@@ -134,7 +134,7 @@ export const getOneUserDetail = async (req, res, next) => {
       );
     }
 
-    const {password , ...userData} = user.toObject()
+    const { password, ...userData } = user.toObject();
 
     res.json({ message: "User updated successfully", data: userData });
   } catch (err) {
@@ -199,6 +199,49 @@ export const getUsers = async (req, res, next) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
+  }
+};
+
+// price number
+
+export const addPriceNumbers = async (req, res, next) => {
+  try {
+    const { bond, numbers } = req.body;
+    if (!bond) {
+      return res.status(400).json({ message: "Bond is required." });
+  }
+    const match = bond.match(/([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})/);
+    const bondType = match[1]; // Extracted bond type
+    const date = match[2]; 
+
+    if (!bondType || !Array.isArray(numbers)) {
+      return res
+        .status(400)
+        .json({ message: "bondType and numbers are required" });
+    }
+
+    // for (const number of numbers) {
+    //   if (
+    //     typeof number.figure !== "number" ||
+    //     typeof number.inam !== "String"
+    //   ) {
+    //     return res
+    //       .status(400)
+    //       .json({ message: "Each number must contain figure and inam values" });
+    //   }
+    // }
+
+    const newNumbers = new priceNumber({
+      bondType,
+      date, 
+      numbers,
+    });
+    await newNumbers.save();
+
+    res.status(201).json({ message: "Bond added successfully", data: newNumbers });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -348,13 +391,10 @@ export const updateBond = async (req, res, next) => {
 //       { multi: true }
 //     );
 
-
-
-
 //     const purchase = new Purchase({
 //       bondType,
 //       date,
-//       isDisable: false,  
+//       isDisable: false,
 //       userId,
 //       figures: {
 //         figure: figures.figure,
@@ -392,7 +432,7 @@ export const updateBond = async (req, res, next) => {
 //     const figureLength = String(figure).length;
 //     const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
 //     console.log(foundFigure , "foundFigure");
-    
+
 //     if (!foundFigure) {
 //       return res.status(404).send({
 //         message: "Figure not found in the bond"
@@ -429,8 +469,7 @@ export const figures = async (req, res, next) => {
       { multi: true }
     );
 
-
-      res.status(200).send({
+    res.status(200).send({
       message: "Figures added to all bonds successfully",
       modifiedCount: result.modifiedCount,
     });
@@ -441,11 +480,11 @@ export const figures = async (req, res, next) => {
 };
 
 export const getFiguresByFigure = async (req, res, next) => {
-  const { bondType,figure } = req.params;
+  const { bondType, figure } = req.params;
 
   try {
     const bond = await Bond.findOne({
-      bondType: bondType
+      bondType: bondType,
     });
 
     if (!bond) {
@@ -456,11 +495,13 @@ export const getFiguresByFigure = async (req, res, next) => {
 
     const bondObject = bond.toObject();
     const figureLength = String(figure).length;
-    const foundFigure = bondObject.figures.find(f => String(f.figure).length === figureLength);
-    
+    const foundFigure = bondObject.figures.find(
+      (f) => String(f.figure).length === figureLength
+    );
+
     if (!foundFigure) {
       return res.status(404).send({
-        message: "Figure not found in the bond"
+        message: "Figure not found in the bond",
       });
     }
 
@@ -478,7 +519,6 @@ export const getFiguresByFigure = async (req, res, next) => {
   }
 };
 
-
 export default {
   updateBond,
   activateBond,
@@ -493,4 +533,5 @@ export default {
   figures,
   getFiguresByFigure,
   getUserBonds,
+  addPriceNumbers,
 };

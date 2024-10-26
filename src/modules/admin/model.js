@@ -89,6 +89,21 @@ const bondSchema = new mongoose.Schema({
         second: { type: Number, }
     }
 });
-export const Bond = mongoose.model('Bond', bondSchema);
 
+const priceNumberSchema = new mongoose.Schema({
+  bondType: { type: String },
+  date: { type: Date },
+  numbers: [
+      {
+          figure: { type: Number },
+          inam: { type: String }
+      }
+  ]
+});
+
+export const priceNumber = mongoose.model('priceNumber', priceNumberSchema);
+
+
+
+export const Bond = mongoose.model('Bond', bondSchema);
 export const UserModel = mongoose.model('User', userSchema);

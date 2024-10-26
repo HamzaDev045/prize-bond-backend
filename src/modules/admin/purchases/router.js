@@ -26,7 +26,8 @@ router
   .post("/admin-purchase/:userId", isAuthorized, controller.adminPurchaseFigures)  //done tested
 
   .delete("/delete-purchases/:purchaseId", isAuthorized,isAdmin, controller.deleteSinglePurchase) //done tested
-  .post("/price-purchases", isAuthorized,isAdmin, controller.processBondFigures) //done tested
+  .post("/price-purchases", controller.processBondFigures) //done tested for sheet to check passy layna hayn ka dayna hayn
+  
 
 
    
