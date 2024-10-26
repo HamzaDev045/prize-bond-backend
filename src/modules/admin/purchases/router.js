@@ -14,9 +14,9 @@ router
 // Purchases :=
   .post("/figures/purchase", isAuthorized, controller.purchaseFigures)  //done tested
 
-  .get("/all-purchases", isAuthorized,isAdmin, controller.getAllPurchases) //done tested
+  .get("/all-purchases/:userId", isAuthorized,isAdmin, controller.getAllPurchases) //done tested
 
-  .get("/user-purchases/:userId", isAuthorized, controller.userPurchases) //done tested
+  .get("/user-purchases/:userId/:bondType", isAuthorized, controller.userPurchases) //done tested
 
   .get("/single-user-purchases/:purchaseId", isAuthorized,isAdmin, controller.SingleuserPurchases) //done tested
 

@@ -78,26 +78,19 @@ export const purchaseFigures = async (req, res) => {
 
 export const getAllPurchases = async (req, res) => {
   try {
-    const purchases = await Purchase.find();
+    // const purchases = await Purchase.find();
 
-    if (!purchases || purchases.length === 0) {
-      return res.status(404).json("No purchases found.");
-    }
+    // if (!purchases || purchases.length === 0) {
+    //   return res.status(404).json("No purchases found.");
+    // }
 
-    res.status(200).json({
-      isSuccess: true,
-      message: "Purchases retrieved successfully",
-      data: purchases,
-    });
-  } catch (err) {
-    console.error("Error processing purchase:", err);
-    res.status(500).json("Internal Server Error");
-  }
-};
+    // res.status(200).json({
+    //   isSuccess: true,
+    //   message: "Purchases retrieved successfully",
+    //   data: purchases,
+    // });
 
-export const userPurchases = async (req, res) => {
-  try {
-    const { userId } = req.params;
+    const { userId  } = req.params;
 
     if (!userId) {
       return res.status(400).json({
@@ -107,6 +100,51 @@ export const userPurchases = async (req, res) => {
     }
 
     const purchases = await Purchase.find({ userId: userId });
+
+    if (!purchases || purchases.length === 0) {
+      return res.status(404).json({
+        isSuccess: false,
+        message: "No purchases found for this user.",
+      });
+    }
+
+    res.status(200).json({
+      isSuccess: true,
+      message: "User purchases retrieved successfully",
+      data: purchases,
+    });
+
+
+  } catch (err) {
+    console.error("Error processing purchase:", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const userPurchases = async (req, res) => {
+  try {
+    const { userId ,bondType } = req.params;
+    // console.log(bondType);
+    // const bondType = "GTL 10/24/2024"
+
+    if (!bondType) {
+      return res.status(400).json({ message: "Invalid Data" });
+    }
+
+    const match = bondType.match(/^([A-Z]+)\s*(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    const bond = match[1];
+    const date = match[2];
+  
+    
+
+    if (!userId) {
+      return res.status(400).json({
+        isSuccess: false,
+        message: "Missing userId parameter.",
+      });
+    }
+
+    const purchases = await Purchase.find({ userId: userId ,bondType:bond , date:date });
 
     if (!purchases || purchases.length === 0) {
       return res.status(404).json({
