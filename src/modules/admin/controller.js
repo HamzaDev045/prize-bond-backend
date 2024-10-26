@@ -220,17 +220,6 @@ export const addPriceNumbers = async (req, res, next) => {
         .json({ message: "bondType and numbers are required" });
     }
 
-    // for (const number of numbers) {
-    //   if (
-    //     typeof number.figure !== "number" ||
-    //     typeof number.inam !== "String"
-    //   ) {
-    //     return res
-    //       .status(400)
-    //       .json({ message: "Each number must contain figure and inam values" });
-    //   }
-    // }
-
     const newNumbers = new priceNumber({
       bondType,
       date, 

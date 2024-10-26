@@ -2,7 +2,7 @@ import { Bond, UserModel, priceNumber } from "../model.js";
 import { Purchase } from "./model.js";
 
 export const purchaseFigures = async (req, res) => {
-  const { bondType, figure, firstAmount, secondAmount } = req.body;
+  const { bondType, figure, firstAmount, secondAmount,date } = req.body;
   const userId = req.userId;
   try {
     const bond = await Bond.findOne({ bondType: bondType });
@@ -52,6 +52,7 @@ export const purchaseFigures = async (req, res) => {
 
     const newPurchase = new Purchase({
       userId: userId,
+      date:date,
       bondType: bondType,
       figures: { figure: figure, first: firstAmount, second: secondAmount },
       isNormal: true,
@@ -368,7 +369,7 @@ export const deleteSinglePurchase = async (req, res) => {
 };
 
 export const adminPurchaseFigures = async (req, res) => {
-  const { bondType, figure, firstAmount, secondAmount } = req.body;
+  const { bondType, figure, firstAmount, secondAmount ,date } = req.body;
 
   const { userId } = req.params;
 
@@ -419,6 +420,7 @@ export const adminPurchaseFigures = async (req, res) => {
 
     const newPurchase = new Purchase({
       userId: userId,
+      date:date,
       figures: foundFigure,
       isNormal: false,
     });
@@ -613,13 +615,28 @@ export const adminPurchaseFigures = async (req, res) => {
 export const processBondFigures = async (req, res) => {
   const { bondType, userId } = req.body;
 
+  if (!bondType || !userId) {
+    return res.status(400).json({ message: "Invalid Data" });
+  }
+  const match = bondType.match(/^([A-Z]+)\s*(\d{1,2}\/\d{1,2}\/\d{4})$/);
+  const bond = match[1];
+  const date = match[2];
+
   try {
     const purchasesData = await Purchase.find({
-      bondType: bondType,
+      bondType: bond,
       userId,
     }).populate("userId");
     const user = await UserModel.findOne({ _id: userId });
-    const numberdata = await priceNumber.findOne({ bondType: bondType });
+    const numberdata = await priceNumber.findOne({
+      bondType: bond,
+      date: date
+    });
+    if (!numberdata) {
+      return res
+        .status(400)
+        .json({ message: "This Bond Winner is not Decided yet" });
+    }
     const winArray = numberdata?.numbers;
     const results = {
       normal: {

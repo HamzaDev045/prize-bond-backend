@@ -92,7 +92,7 @@ const bondSchema = new mongoose.Schema({
 
 const priceNumberSchema = new mongoose.Schema({
   bondType: { type: String },
-  date: { type: Date },
+  date: { type: String },
   numbers: [
       {
           figure: { type: Number },

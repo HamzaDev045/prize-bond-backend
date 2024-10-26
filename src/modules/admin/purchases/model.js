@@ -1,7 +1,8 @@
 import mongoose from 'mongoose'
 
 const purchaseSchema = new mongoose.Schema({
-    userId:{type:String},       
+    userId:{type:String}, 
+    date:{type:String},
     figures: {
         figure: { type: Number},
         first: { type: Number},
