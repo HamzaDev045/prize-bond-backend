@@ -2,7 +2,7 @@ import { Bond, UserModel, priceNumber } from "../model.js";
 import { Purchase } from "./model.js";
 
 export const purchaseFigures = async (req, res) => {
-  const { bondType, figure, firstAmount, secondAmount,date } = req.body;
+  const { bondType, figure, firstAmount, secondAmount, date } = req.body;
   const userId = req.userId;
   try {
     const bond = await Bond.findOne({ bondType: bondType });
@@ -52,7 +52,7 @@ export const purchaseFigures = async (req, res) => {
 
     const newPurchase = new Purchase({
       userId: userId,
-      date:date,
+      date: date,
       bondType: bondType,
       figures: { figure: figure, first: firstAmount, second: secondAmount },
       isNormal: true,
@@ -90,7 +90,7 @@ export const getAllPurchases = async (req, res) => {
     //   data: purchases,
     // });
 
-    const { userId  } = req.params;
+    const { userId } = req.params;
 
     if (!userId) {
       return res.status(400).json({
@@ -123,19 +123,19 @@ export const getAllPurchases = async (req, res) => {
 
 export const userPurchases = async (req, res) => {
   try {
-    const { userId ,bondType } = req.params;
-    // console.log(bondType);
+    const { userId } = req.params;
+    const { bondType } = req.body;
     // const bondType = "GTL 10/24/2024"
 
     if (!bondType) {
       return res.status(400).json({ message: "Invalid Data" });
     }
 
-    const match = bondType.match(/^([A-Z]+)\s*(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    const match = bondType.match(/^([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})$/);
     const bond = match[1];
     const date = match[2];
-  
-    
+
+
 
     if (!userId) {
       return res.status(400).json({
@@ -144,7 +144,7 @@ export const userPurchases = async (req, res) => {
       });
     }
 
-    const purchases = await Purchase.find({ userId: userId ,bondType:bond , date:date });
+    const purchases = await Purchase.find({ userId: userId, bondType: bond, date: date });
 
     if (!purchases || purchases.length === 0) {
       return res.status(404).json({
@@ -407,12 +407,14 @@ export const deleteSinglePurchase = async (req, res) => {
 };
 
 export const adminPurchaseFigures = async (req, res) => {
-  const { bondType, figure, firstAmount, secondAmount ,date } = req.body;
+  const { bondType, figure, firstAmount, secondAmount, date } = req.body;
 
   const { userId } = req.params;
 
   try {
     const bond = await Bond.findOne({ bondType: bondType });
+    console.log(bond);
+
 
     if (!bond) {
       return res.status(400).json("Bond not found");
@@ -440,6 +442,7 @@ export const adminPurchaseFigures = async (req, res) => {
     }
 
     const totalCost = Number(firstAmount) + Number(secondAmount);
+
     if (totalCost > user.balance) {
       return res.status(400).json("Insufficient balance");
     }
@@ -458,8 +461,9 @@ export const adminPurchaseFigures = async (req, res) => {
 
     const newPurchase = new Purchase({
       userId: userId,
-      date:date,
-      figures: foundFigure,
+      date: date,
+      bondType: bondType,
+      figures: { figure: figure, first: firstAmount, second: secondAmount },
       isNormal: false,
     });
 
@@ -732,28 +736,28 @@ export const processBondFigures = async (req, res) => {
               win?.inam === "first"
                 ? matchingFigure?.figures?.first * 7
                 : (matchingFigure?.figures?.second * 7) /
-                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
             break;
           case 2:
             prize =
               win?.inam === "first"
                 ? matchingFigure?.figures?.first * 70
                 : (matchingFigure?.figures?.second * 70) /
-                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
             break;
           case 3:
             prize =
               win?.inam === "first"
                 ? matchingFigure?.figures?.first * 700
                 : (matchingFigure?.figures?.second * 700) /
-                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
             break;
           case 4:
             prize =
               win?.inam === "first"
                 ? matchingFigure?.figures?.first * 5000
                 : (matchingFigure?.figures?.second * 5000) /
-                  (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
             break;
           default:
             break;
