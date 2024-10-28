@@ -717,7 +717,6 @@ export const processBondFigures = async (req, res) => {
     });
 
     let totalPrize = 0;
-    // let winningFigure=[null]
 
     winArray.forEach((win) => {
       const matchingFigure = purchasesData.find(

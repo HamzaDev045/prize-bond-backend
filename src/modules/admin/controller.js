@@ -20,7 +20,7 @@ import {
   generateRefreshToken,
 } from "../../utils/index.js";
 import { MESSEGES } from "../../constants/index.js";
-import { Bond, UserModel ,priceNumber } from "./model.js";
+import { Bond, UserModel, priceNumber } from "./model.js";
 
 export const signIn = async (req, res, next) => {
   try {
@@ -209,10 +209,10 @@ export const addPriceNumbers = async (req, res, next) => {
     const { bond, numbers } = req.body;
     if (!bond) {
       return res.status(400).json({ message: "Bond is required." });
-  }
+    }
     const match = bond.match(/([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})/);
     const bondType = match[1]; // Extracted bond type
-    const date = match[2]; 
+    const date = match[2];
 
     if (!bondType || !Array.isArray(numbers)) {
       return res
@@ -222,12 +222,127 @@ export const addPriceNumbers = async (req, res, next) => {
 
     const newNumbers = new priceNumber({
       bondType,
-      date, 
+      date,
       numbers,
     });
     await newNumbers.save();
 
-    res.status(201).json({ message: "Bond added successfully", data: newNumbers });
+    const user = await UserModel.find({ role: "user" });
+    const userResults = [];
+    if (user) {
+      await Promise.all(user.map(async (user) => {
+        const purchasesData = await Purchase.find({
+          bondType: bondType,
+          date:date,
+          userId: user._id,
+        });
+
+        if (purchasesData) {
+          const results = {
+            total: 0,
+            commission: 0,
+            remain: 0,
+          };
+
+          function calculateCommissionAndRemain(total, figureLength) {
+            let commissionRate = 0;
+            if (
+              figureLength === 1 ||
+              figureLength === 2 ||
+              figureLength === 3
+            ) {
+              commissionRate = user?.initialFigureCommision / 100;
+            } else if (figureLength === 4) {
+              commissionRate = user?.forthFigureCommision / 100;
+            }
+
+            const commission = total * commissionRate;
+            const remain = total - commission;
+
+            return { commission, remain };
+          }
+
+          purchasesData.forEach((bond) => {
+            const total = bond.figures.first + bond.figures.second;
+
+            const figureLength = bond.figures.figure.toString().length;
+            const { commission, remain } = calculateCommissionAndRemain(
+              total,
+              figureLength
+            );
+
+            results.total += total;
+            results.commission += commission;
+            results.remain += remain;
+          });
+
+          let totalPrize = 0;
+
+          numbers.forEach((win) => {
+            const matchingFigure = purchasesData.find(
+              (item) => item?.figures?.figure === win?.figure
+            );
+
+            if (matchingFigure) {
+              const figureType =
+                matchingFigure?.figures?.figure?.toString().length;
+              let prize = 0;
+              switch (figureType) {
+                case 1:
+                  prize =
+                    win?.inam === "first"
+                      ? matchingFigure?.figures?.first * 7
+                      : (matchingFigure?.figures?.second * 7) /
+                        (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                  break;
+                case 2:
+                  prize =
+                    win?.inam === "first"
+                      ? matchingFigure?.figures?.first * 70
+                      : (matchingFigure?.figures?.second * 70) /
+                        (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                  break;
+                case 3:
+                  prize =
+                    win?.inam === "first"
+                      ? matchingFigure?.figures?.first * 700
+                      : (matchingFigure?.figures?.second * 700) /
+                        (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                  break;
+                case 4:
+                  prize =
+                    win?.inam === "first"
+                      ? matchingFigure?.figures?.first * 5000
+                      : (matchingFigure?.figures?.second * 5000) /
+                        (bondType === "GTL" || bondType === "PB:200" ? 5 : 3);
+                  break;
+                default:
+                  break;
+              }
+
+              totalPrize += prize;
+            }
+          });
+
+          userResults.push({
+            userId: user._id,
+            userName: user.username,
+            totalPurchasedAmount: results?.total,
+            PurchasedAmountCommission: results?.commission,
+            purchasedAmountRemaning: results?.remain,
+            totalPrize,
+            overAll: totalPrize - results?.remain,
+          });
+
+          console.log(userResults, "....");
+        }
+      }));
+    }
+
+    // , data: newNumbers
+    res
+      .status(201)
+      .json({ message: "Bond added successfully", data: userResults });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
