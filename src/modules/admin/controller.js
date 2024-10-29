@@ -210,9 +210,22 @@ export const addPriceNumbers = async (req, res, next) => {
     if (!bond) {
       return res.status(400).json({ message: "Bond is required." });
     }
-    const match = bond.match(/([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})/);
-    const bondType = match[1]; // Extracted bond type
+
+    
+    // const match = bond.match(/([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})/);
+    const match = bond.match(/^([A-Z:0-9]+?)(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    const bondType = match[1];
     const date = match[2];
+    
+    const existingBond = await priceNumber.find({
+      bondType:bondType,
+      date:date,
+    })
+    if(existingBond.length > 0){
+      return res
+        .status(400)
+        .json({ message: "This bond winner is decided you can't change it " });
+    }
 
     if (!bondType || !Array.isArray(numbers)) {
       return res
@@ -236,6 +249,8 @@ export const addPriceNumbers = async (req, res, next) => {
           date:date,
           userId: user._id,
         });
+        console.log(purchasesData , "aaa");
+        
 
         if (purchasesData) {
           const results = {
@@ -279,9 +294,13 @@ export const addPriceNumbers = async (req, res, next) => {
           let totalPrize = 0;
 
           numbers.forEach((win) => {
+            console.log(win , "win");
+            
             const matchingFigure = purchasesData.find(
-              (item) => item?.figures?.figure === win?.figure
+              (item) => item?.figures?.figure === Number(win?.figure)
             );
+            console.log(matchingFigure , "matchingFigure");
+            
 
             if (matchingFigure) {
               const figureType =
@@ -333,8 +352,6 @@ export const addPriceNumbers = async (req, res, next) => {
             totalPrize,
             overAll: totalPrize - results?.remain,
           });
-
-          console.log(userResults, "....");
         }
       }));
     }

@@ -125,15 +125,19 @@ export const userPurchases = async (req, res) => {
   try {
     const { userId } = req.params;
     const { bondType } = req.body;
-    // const bondType = "GTL 10/24/2024"
+    console.log(bondType ,"bondType");
+    
 
     if (!bondType) {
       return res.status(400).json({ message: "Invalid Data" });
     }
 
-    const match = bondType.match(/^([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    // const match = bondType.match(/^([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    const match = bondType.match(/^([A-Z:0-9]+?)(\d{1,2}\/\d{1,2}\/\d{4})$/);
     const bond = match[1];
     const date = match[2];
+    console.log(bond ,"bond");
+    console.log(date ,"date");
 
 
 
@@ -667,6 +671,7 @@ export const processBondFigures = async (req, res) => {
   try {
     const purchasesData = await Purchase.find({
       bondType: bond,
+      date: date,
       userId,
     }).populate("userId");
     const user = await UserModel.findOne({ _id: userId });
