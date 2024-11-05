@@ -583,10 +583,45 @@ export const figures = async (req, res, next) => {
 
   const { figures } = value;
 
+  const generateFigures = (baseFigure, first, second) => {
+    let start, end;
+
+    switch (String(baseFigure).length) {
+      case 1:
+        start = 1;
+        end = 9;
+        break;
+      case 2:
+        start = 10;
+        end = 99;
+        break;
+      case 3:
+        start = 100;
+        end = 999;
+        break;
+      case 4:
+        start = 1000;
+        end = 9999;
+        break;
+      default:
+        return [];
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, i) => ({
+      figure: start + i,
+      first: parseInt(first),
+      second: parseInt(second),
+    }));
+  };
+
   try {
+    const newFigures = figures.flatMap(({ figure, first, second }) =>
+      generateFigures(figure, first, second)
+    );
+
     const result = await Bond.updateMany(
       {},
-      { $set: { figures: figures } },
+      { $set: { figures: newFigures } },
       { multi: true }
     );
 
@@ -614,11 +649,11 @@ export const getFiguresByFigure = async (req, res, next) => {
       );
     }
 
-    const bondObject = bond.toObject();
-    const figureLength = String(figure).length;
-    const foundFigure = bondObject.figures.find(
-      (f) => String(f.figure).length === figureLength
-    );
+    // const bondObject = bond.toObject();
+
+    const bondObject = bond.toObject(); 
+    const parsedFigure = parseInt(figure);
+    const foundFigure = bondObject.figures.find((fig) => fig?.figure === parsedFigure);
 
     if (!foundFigure) {
       return res.status(404).send({

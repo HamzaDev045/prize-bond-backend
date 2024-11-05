@@ -2,6 +2,7 @@ import { Bond, UserModel, priceNumber } from "../model.js";
 import { Purchase } from "./model.js";
 
 export const purchaseFigures = async (req, res) => {
+  
   const { bondType, figure, firstAmount, secondAmount, date } = req.body;
   const userId = req.userId;
   try {
@@ -18,11 +19,8 @@ export const purchaseFigures = async (req, res) => {
 
     const bondObject = bond.toObject();
 
-    const figureLength = String(figure).length;
-
-    const foundFigure = bondObject.figures.find(
-      (f) => String(f.figure).length === figureLength
-    );
+    const parsedFigure = parseInt(figure);
+    const foundFigure = bondObject.figures.find((fig) => fig?.figure === parsedFigure);
 
     if (!foundFigure) {
       return res.status(404).json("Figure not found");
@@ -38,17 +36,12 @@ export const purchaseFigures = async (req, res) => {
       return res.status(400).json("Insufficient balance");
     }
 
-    const newFirstValue = foundFigure.first - firstAmount;
-    const newSecondValue = foundFigure.second - secondAmount;
+    const figureIndex = bondObject.figures.findIndex((fig) => fig?.figure === parsedFigure);
 
-    const indexToUpdate = figureLength - 1;
-
-    bondObject.figures[indexToUpdate].first = newFirstValue;
-    bondObject.figures[indexToUpdate].second = newSecondValue;
+    bondObject.figures[figureIndex].first -= firstAmount;
+    bondObject.figures[figureIndex].second -= secondAmount;
 
     await Bond.updateOne({ bondType: bondType }, { $set: bondObject });
-
-    const updatedBond = await Bond.findOne({ bondType: bondType });
 
     const newPurchase = new Purchase({
       userId: userId,
@@ -66,7 +59,6 @@ export const purchaseFigures = async (req, res) => {
       isSuccess: true,
       message: "Bond purchase successful",
       data: {
-        bond: updatedBond,
         user: user.balance,
       },
     });
@@ -252,11 +244,9 @@ export const updateSinglePurchase = async (req, res) => {
     }
 
     const bondObject = bond.toObject();
-    const figureLength = String(purchase.figures.figure).length;
 
-    const foundFigure = bondObject.figures.find(
-      (f) => String(f.figure).length === figureLength
-    );
+    const parsedFigure = parseInt(purchase.figures.figure);
+    const foundFigure = bondObject.figures.find((fig) => fig?.figure === parsedFigure)
 
     if (!foundFigure) {
       return res.status(404).json({
@@ -291,6 +281,8 @@ export const updateSinglePurchase = async (req, res) => {
     if (secondAmount !== undefined) {
       foundFigure.second += -secondDifference;
     }
+
+
 
     await user.save();
 
@@ -367,11 +359,9 @@ export const deleteSinglePurchase = async (req, res) => {
     }
 
     const bondObject = bond.toObject();
-    const figureLength = String(purchase.figures.figure).length;
 
-    const foundFigure = bondObject.figures.find(
-      (f) => String(f.figure).length === figureLength
-    );
+    const parsedFigure = parseInt(purchase.figures.figure);
+    const foundFigure = bondObject.figures.find((fig) => fig?.figure === parsedFigure)
 
     if (!foundFigure) {
       return res.status(404).json({
@@ -380,11 +370,12 @@ export const deleteSinglePurchase = async (req, res) => {
       });
     }
 
-    // Re-add the 'first' and 'second' values back to the bond
-    foundFigure.first += purchase.figures.first; // add back the 'first' value
-    foundFigure.second += purchase.figures.second; // add back the 'second' value
 
-    // Update the bond with the re-added values
+    const figureIndex = bondObject.figures.findIndex((fig) => fig?.figure === parsedFigure);
+
+    bondObject.figures[figureIndex].first += purchase.figures.first;
+    bondObject.figures[figureIndex].second += purchase.figures.second;
+
     await Bond.updateOne({ bondType: purchase.bondType }, { $set: bondObject });
 
     const deletedPurchase = await Purchase.findByIdAndDelete(purchaseId);
@@ -417,8 +408,6 @@ export const adminPurchaseFigures = async (req, res) => {
 
   try {
     const bond = await Bond.findOne({ bondType: bondType });
-    console.log(bond);
-
 
     if (!bond) {
       return res.status(400).json("Bond not found");
@@ -431,11 +420,8 @@ export const adminPurchaseFigures = async (req, res) => {
 
     const bondObject = bond.toObject();
 
-    const figureLength = String(figure).length;
-
-    const foundFigure = bondObject.figures.find(
-      (f) => String(f.figure).length === figureLength
-    );
+    const parsedFigure = parseInt(figure);
+    const foundFigure = bondObject.figures.find((fig) => fig?.figure === parsedFigure);
 
     if (!foundFigure) {
       return res.status(404).json("Figure not found");
@@ -451,13 +437,10 @@ export const adminPurchaseFigures = async (req, res) => {
       return res.status(400).json("Insufficient balance");
     }
 
-    const newFirstValue = foundFigure.first - firstAmount;
-    const newSecondValue = foundFigure.second - secondAmount;
+    const figureIndex = bondObject.figures.findIndex((fig) => fig?.figure === parsedFigure);
 
-    const indexToUpdate = figureLength - 1;
-
-    bondObject.figures[indexToUpdate].first = newFirstValue;
-    bondObject.figures[indexToUpdate].second = newSecondValue;
+    bondObject.figures[figureIndex].first -= firstAmount;
+    bondObject.figures[figureIndex].second -= secondAmount;
 
     await Bond.updateOne({ bondType: bondType }, { $set: bondObject });
 
