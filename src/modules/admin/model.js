@@ -10,7 +10,13 @@ export const userSchema = new mongoose.Schema(
   {
     username: { type: String  },
     password: { type: String  },
-    balance: { type: Number, default: 0 },
+    // balance: { type: Number, default: 0 },
+    balance: [
+      {
+        bond: { type: String },
+        balance: { type: Number },
+      },
+    ],
     role: { type: String, enum: ["admin", "user"], default: "user" },
     email: {
       type: String,

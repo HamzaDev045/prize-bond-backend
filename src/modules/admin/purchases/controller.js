@@ -31,8 +31,12 @@ export const purchaseFigures = async (req, res) => {
     }
 
     const totalCost = Number(firstAmount) + Number(secondAmount);
+    const bondBalance = user.balance.find(b => b.bond === bondType);
+    if(bondBalance === 0){
+      return res.status(400).json("Insufficient balance");
+    }
 
-    if (totalCost > user.balance) {
+    if (totalCost > bondBalance) {
       return res.status(400).json("Insufficient balance");
     }
 
@@ -51,9 +55,15 @@ export const purchaseFigures = async (req, res) => {
       isNormal: true,
     });
 
-    user.balance -= totalCost;
+    // user.balance -= totalCost;
     await newPurchase.save();
-    await user.save();
+    // await user.save();
+    await UserModel.findOneAndUpdate(
+      { _id: user._id, "balance.bond": bondType },
+      { $inc: { "balance.$.balance": -totalCost } },
+      { new: true }
+    );
+
 
     res.status(200).json({
       isSuccess: true,
@@ -233,6 +243,7 @@ export const updateSinglePurchase = async (req, res) => {
         message: "User not found for this purchase.",
       });
     }
+    const bondBalance = user.balance.find(b => b.bond === purchase.bondType);
 
     const bond = await Bond.findOne({ bondType: purchase.bondType });
 
@@ -244,15 +255,17 @@ export const updateSinglePurchase = async (req, res) => {
     }
 
     const bondObject = bond.toObject();
-
     const parsedFigure = parseInt(purchase.figures.figure);
     const foundFigure = bondObject.figures.find((fig) => fig?.figure === parsedFigure)
-
+    
     if (!foundFigure) {
       return res.status(404).json({
         isSuccess: false,
         message: "Figure not found in the bond.",
       });
+    }
+    if (firstAmount > foundFigure.first || secondAmount > foundFigure.second) {
+      return res.status(400).json("Requested amounts exceed available figures");
     }
 
     const firstDifference =
@@ -262,17 +275,28 @@ export const updateSinglePurchase = async (req, res) => {
 
     const totalDifference = firstDifference + secondDifference;
 
+
     if (totalDifference > 0) {
-      if (totalDifference > user.balance) {
+      if (totalDifference > bondBalance) {
         return res.status(400).json({
           isSuccess: false,
           message:
             "User does not have enough balance to cover the additional cost.",
         });
       }
-      user.balance -= totalDifference;
+      // user.balance -= totalDifference;
+      await UserModel.findOneAndUpdate(
+        { _id: user._id, "balance.bond": purchase.bondType },
+        { $inc: { "balance.$.balance": -totalDifference } },
+        { new: true }
+      );
     } else if (totalDifference < 0) {
-      user.balance += Math.abs(totalDifference);
+      await UserModel.findOneAndUpdate(
+        { _id: user._id, "balance.bond": purchase.bondType },
+        { $inc: { "balance.$.balance": +Math.abs(totalDifference)} },
+        { new: true }
+      );
+      // bondBalance += Math.abs(totalDifference);
     }
 
     if (firstAmount !== undefined) {
@@ -284,7 +308,7 @@ export const updateSinglePurchase = async (req, res) => {
 
 
 
-    await user.save();
+    // await user.save();
 
     await Bond.updateOne({ bondType: purchase.bondType }, { $set: bondObject });
 
@@ -311,7 +335,7 @@ export const updateSinglePurchase = async (req, res) => {
       isSuccess: true,
       message: "Purchase and bond updated successfully",
       data: updatedPurchase,
-      updatedBalance: user.balance,
+      updatedBalance: bondBalance,
     });
   } catch (err) {
     console.error("Error updating purchase:", err);
@@ -346,8 +370,14 @@ export const deleteSinglePurchase = async (req, res) => {
 
     const refundAmount = purchase.figures.first + purchase.figures.second;
 
-    user.balance += refundAmount;
-    await user.save();
+    // user.balance += refundAmount;
+    // await user.save();
+    await UserModel.findOneAndUpdate(
+      { _id: user._id, "balance.bond": purchase.bondType },
+      { $inc: { "balance.$.balance": +refundAmount } },
+      { new: true }
+    );
+    
 
     const bond = await Bond.findOne({ bondType: purchase.bondType });
 
@@ -423,6 +453,7 @@ export const adminPurchaseFigures = async (req, res) => {
     const parsedFigure = parseInt(figure);
     const foundFigure = bondObject.figures.find((fig) => fig?.figure === parsedFigure);
 
+    
     if (!foundFigure) {
       return res.status(404).json("Figure not found");
     }
@@ -432,8 +463,12 @@ export const adminPurchaseFigures = async (req, res) => {
     }
 
     const totalCost = Number(firstAmount) + Number(secondAmount);
+    const bondBalance = user.balance.find(b => b.bond === bondType);
+    if(bondBalance === 0){
+      return res.status(400).json("Insufficient balance");
+    }
 
-    if (totalCost > user.balance) {
+    if (totalCost > bondBalance) {
       return res.status(400).json("Insufficient balance");
     }
 
@@ -454,9 +489,14 @@ export const adminPurchaseFigures = async (req, res) => {
       isNormal: false,
     });
 
-    user.balance -= totalCost;
+    // user.balance -= totalCost;
     await newPurchase.save();
-    await user.save();
+    await UserModel.findOneAndUpdate(
+      { _id: user._id, "balance.bond": bondType },
+      { $inc: { "balance.$.balance": -totalCost } },
+      { new: true }
+    );
+    // await user.save();
 
     res.status(200).json({
       isSuccess: true,

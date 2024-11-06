@@ -44,7 +44,6 @@ export const createUser = async (data, next) => {
     );
   }
   const savedUser=await UserModel.create(data);
-  // console.log(savedUser,"saved USer");
   
   return savedUser;
 };
