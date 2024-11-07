@@ -434,7 +434,7 @@ export const getUserBonds = async (req, res, next) => {
   // }
 
   try {
-    const bonds = await Bond.find();
+    const bonds = await Bond.find().select("-figures");
     res.json({
       isSuccess: true,
       message: "Bond Retrieved Sucessfuly",
