@@ -13,6 +13,7 @@ router
   .post("/create-user", isAuthorized, isAdmin, controller.createNewUser)
   .delete("/delete-user/:id", isAuthorized, isAdmin, controller.deleteUser)
   .put("/update-user/:userId", isAuthorized, isAdmin, controller.updateUser)
+  .put("/password-user/:userId", isAuthorized, isAdmin, controller.changePassword)
   .get("/user/:userId", isAuthorized,  controller.getOneUserDetail)
   .get("/users", isAuthorized, isAdmin, controller.getUsers)
 

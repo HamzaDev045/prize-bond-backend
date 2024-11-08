@@ -174,6 +174,37 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
+export const changePassword = async (req, res, next) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return next(apiError.badRequest(MESSEGES.USER_ID_REQUIRED, "updateUser"));
+  }
+
+  try {
+    let user = await getUserByConditions({ _id: userId }, "-__v");
+
+    if (!user) {
+      return next(
+        apiError.badRequest(MESSEGES.USER_DOES_NOT_EXIST, "updateUser")
+      );
+    }
+
+    const updatedUser = await updateUserbyId(userId, req.body);
+
+    if (!updatedUser) {
+      return next(
+        apiError.badRequest(MESSEGES.USER_UPDATE_FAILED, "updateUser")
+      );
+    }
+
+    res.json({ message: "User updated successfully", data: updatedUser });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
 export const getUsers = async (req, res, next) => {
   const { page = 1, limit = 10 } = req.query;
 
@@ -686,6 +717,7 @@ export default {
   getOneUserDetail,
   createNewUser,
   updateUser,
+  changePassword,
   getUsers,
   figures,
   getFiguresByFigure,
