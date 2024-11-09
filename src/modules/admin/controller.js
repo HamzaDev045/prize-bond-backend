@@ -73,12 +73,17 @@ export const signIn = async (req, res, next) => {
 
 export const createNewUser = async (req, res, next) => {
   try {
+    const {userId} =req.body
     // const validationResult = validateCreateUserInputs(req.body);
 
     // console.log(validationResult);
 
     // if (validationResult?.error)
     //   return next(apiError.badRequest(validationResult?.msg, "signUp"));
+    let existingUser = await getUserByConditions({ userId }, "-__v", true);
+    if(existingUser){
+      return res.status(400).json({ message: "User Id must be unique." });
+    }
     const user = await createUser(
       {
         ...req.body,
