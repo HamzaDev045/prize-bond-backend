@@ -2,7 +2,6 @@ import { Bond, UserModel, priceNumber } from "../model.js";
 import { Purchase } from "./model.js";
 
 export const purchaseFigures = async (req, res) => {
-  
   const { bondType, figure, firstAmount, secondAmount, date } = req.body;
   const userId = req.userId;
   try {
@@ -10,6 +9,12 @@ export const purchaseFigures = async (req, res) => {
 
     if (!bond) {
       return res.status(400).json({message :"Bond not found"});
+    }
+    if(bond.isDisable ){
+      return res.status(400).json({message :"Bond is disable purchase not allowed"});
+    }
+    if( bond.winner ){
+      return res.status(400).json({message :"Bond winner is decided purchase not allowed"});
     }
 
     const user = await UserModel.findById(userId);
@@ -111,17 +116,18 @@ export const userPurchases = async (req, res) => {
   try {
     const { userId } = req.params;
     const { bondType } = req.body;
-    console.log(bondType ,"bondType");
-    
-
     if (!bondType) {
       return res.status(400).json({ message: "Invalid Data" });
     }
-
     // const match = bondType.match(/^([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})$/);
     const match = bondType.match(/^([A-Z:0-9]+?)(\d{1,2}\/\d{1,2}\/\d{4})$/);
     const bond = match[1];
     const date = match[2];
+
+    if(!bond || !date){
+      return res.status(400).json({ message: "Invalid Bond" });
+    }
+
     if (!userId) {
       return res.status(400).json({
         isSuccess: false,
@@ -223,8 +229,23 @@ export const updateSinglePurchase = async (req, res) => {
       });
     }
     const bondBalance = user.balance.find(b => b.bond === purchase.bondType);
-
     const bond = await Bond.findOne({ bondType: purchase.bondType });
+    if(bond?.isDisable){
+      return res.status(400).json({message: "Disabled bond",})
+    }
+    if( bond.winner ){
+      return res.status(400).json({message :"Bond winner is decided updation not allowed"});
+    }
+
+    const formattedDate = new Date(bond.date).toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+
+    if(formattedDate !=purchase.date){
+      return res.status(400).json({message: "This purchase Cannot be updated",})
+    }
 
     if (!bond) {
       return res.status(404).json({
@@ -243,14 +264,25 @@ export const updateSinglePurchase = async (req, res) => {
         message: "Figure not found in the bond.",
       });
     }
-    if (firstAmount > foundFigure.first || secondAmount > foundFigure.second) {
-      return res.status(400).json("Requested amounts exceed available figures");
-    }
-
+    // if (firstAmount > foundFigure.first || secondAmount > foundFigure.second) {
+    //   return res.status(400).json("Requested amounts exceed available figures");
+    // }
     const firstDifference =
       firstAmount !== undefined ? firstAmount - purchase.figures.first : 0;
+      console.log(firstDifference , foundFigure.first , "a");
+      
+      if(firstDifference > 0 && firstDifference > foundFigure.first ){
+      console.log(firstDifference , foundFigure.first , "a");
+        return res.status(400).json({message:"Requested amounts exceed available figures"});
+      }
+      
     const secondDifference =
       secondAmount !== undefined ? secondAmount - purchase.figures.second : 0;
+
+      if(secondDifference > 0 && secondDifference > foundFigure.second ){
+      console.log("b");
+        return res.status(400).json({message:"Requested amounts exceed available figures"});
+      }
 
     const totalDifference = firstDifference + secondDifference;
 
@@ -332,8 +364,33 @@ export const deleteSinglePurchase = async (req, res) => {
 
     const purchase = await Purchase.findById(purchaseId);
 
-    const user = await UserModel.findById(purchase.userId);
+    const bond = await Bond.findOne({ bondType: purchase.bondType });
 
+    if (!bond) {
+      return res.status(404).json({
+        isSuccess: false,
+        message: "Bond not found associated with this purchase.",
+      });
+    }
+
+    if(bond?.isDisable){
+      return res.status(400).json({message: "Disabled bond",})
+    }
+    if( bond.winner ){
+      return res.status(400).json({message :"Bond winner is decided purchase not allowed"});
+    }
+
+    const formattedDate = new Date(bond.date).toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+
+    if(formattedDate !=purchase.date){
+      return res.status(400).json({message: "This purchase Cannot be deleted",})
+    }
+
+    const user = await UserModel.findById(purchase.userId);
     if (!user) {
       return res.status(404).json({
         isSuccess: false,
@@ -350,16 +407,6 @@ export const deleteSinglePurchase = async (req, res) => {
       { $inc: { "balance.$.balance": +refundAmount } },
       { new: true }
     );
-    
-
-    const bond = await Bond.findOne({ bondType: purchase.bondType });
-
-    if (!bond) {
-      return res.status(404).json({
-        isSuccess: false,
-        message: "Bond not found associated with this purchase.",
-      });
-    }
 
     const bondObject = bond.toObject();
 
@@ -409,12 +456,19 @@ export const adminPurchaseFigures = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    if (!date) {
-      return res.status(400).json({ message: 'Date is required.' });
+    if (!date || !bondType || !firstAmount || !secondAmount || !figure  ) {
+      return res.status(400).json({ message: 'field is missing is required.' });
     }
     const bond = await Bond.findOne({ bondType: bondType });
     if (!bond) {
       return res.status(400).json({message :"Bond not found"});
+    }
+
+    if(bond.isDisable){
+      return res.status(400).json({message :"Bond is disable purchase not allowed"});
+    }
+    if( bond.winner ){
+      return res.status(400).json({message :"Bond winner is decided purchase not allowed"});
     }
 
     const user = await UserModel.findById(userId);

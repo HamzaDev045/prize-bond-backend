@@ -26,13 +26,13 @@ export const signIn = async (req, res, next) => {
   try {
     const validationResult = validateSignInInputs(req.body);
 
-    let { password, username } = req.body;
+    let { password, userId } = req.body;
 
     if (validationResult?.error) {
       return next(apiError.badRequest(validationResult?.msg, "signin"));
     }
 
-    let existingUser = await getUserByConditions({ username }, "-__v", true);
+    let existingUser = await getUserByConditions({ userId }, "-__v", true);
 
     if (!existingUser) {
       return next(apiError.badRequest(MESSEGES.USER_DOES_NOT_EXIST, "signin"));
@@ -241,12 +241,14 @@ export const addPriceNumbers = async (req, res, next) => {
     if (!bond) {
       return res.status(400).json({ message: "Bond is required." });
     }
-
-    
     // const match = bond.match(/([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})/);
     const match = bond.match(/^([A-Z:0-9]+?)(\d{1,2}\/\d{1,2}\/\d{4})$/);
     const bondType = match[1];
     const date = match[2];
+
+    if(!bond || !date){
+      return res.status(400).json({ message: "Invalid Bond" });
+    }
     
     const existingBond = await priceNumber.find({
       bondType:bondType,
@@ -270,8 +272,14 @@ export const addPriceNumbers = async (req, res, next) => {
       numbers,
     });
     await newNumbers.save();
+    await Bond.updateOne({ bondType: bondType }, { $set: { winner: true } });
+
 
     const user = await UserModel.find({ role: "user" });
+    let totalPurchase = 0
+    let totalCommision = 0
+    let totalRemaning = 0
+    let profitLoss = 0
     const userResults = [];
     if (user) {
       await Promise.all(user.map(async (user) => {
@@ -280,8 +288,6 @@ export const addPriceNumbers = async (req, res, next) => {
           date:date,
           userId: user._id,
         });
-        console.log(purchasesData , "aaa");
-        
 
         if (purchasesData) {
           const results = {
@@ -325,13 +331,10 @@ export const addPriceNumbers = async (req, res, next) => {
           let totalPrize = 0;
 
           numbers.forEach((win) => {
-            console.log(win , "win");
             
             const matchingFigure = purchasesData.find(
               (item) => item?.figures?.figure === Number(win?.figure)
             );
-            console.log(matchingFigure , "matchingFigure");
-            
 
             if (matchingFigure) {
               const figureType =
@@ -383,14 +386,20 @@ export const addPriceNumbers = async (req, res, next) => {
             totalPrize,
             overAll: totalPrize - results?.remain,
           });
+          totalPurchase += results?.total
+          totalCommision += results?.commission
+          totalRemaning += results?.remain
+          profitLoss +=totalPrize - results?.remain
         }
       }));
     }
 
-    // , data: newNumbers
     res
       .status(201)
-      .json({ message: "Bond added successfully", data: userResults });
+      .json({ message: "Bond added successfully", data: userResults ,totalPurchase,
+        totalCommision,
+        totalRemaning,
+        profitLoss, });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -418,7 +427,9 @@ export const activateBond = async (req, res, next) => {
 
     const bond = await Bond.findByIdAndUpdate(
       req.params.id,
-      { isDisable },
+      { isDisable ,
+      winner: false 
+      },
       { new: true, runValidators: true }
     );
     if (!bond) {

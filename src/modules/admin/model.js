@@ -10,7 +10,8 @@ export const userSchema = new mongoose.Schema(
   {
     username: { type: String  },
     password: { type: String  },
-    // balance: { type: Number, default: 0 },
+    userId:{type: Number , unique: true, 
+      required: true, },
     balance: [
       {
         bond: { type: String },
@@ -20,22 +21,18 @@ export const userSchema = new mongoose.Schema(
     role: { type: String, enum: ["admin", "user"], default: "user" },
     email: {
       type: String,
-      
     },
     address: {
       type: String,
     },
     phoneNo: {
       type: String,
-        
     },
     initialFigureCommision: {
       type: String,
-        
     }, 
     forthFigureCommision: {
       type: String,
-        
     },
   },
   { timestamps: true }
@@ -88,6 +85,7 @@ const bondSchema = new mongoose.Schema({
     bondType: { type: String },
     date: { type: Date },
     isDisable:{ type: Boolean },
+    winner:{ type: Boolean },
     userId:{type:String},       
     figures: {
         figure: { type: Number},

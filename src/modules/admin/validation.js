@@ -18,7 +18,7 @@ export const validateSignUpInputs = (data) => {
 
 export const validateSignInInputs = (data) => {
   const Schema = Joi.object({
-    username: Joi.string().required(),
+    userId: Joi.number().required(),
     password: Joi.string().min(3).max(30).required(),
   });
 

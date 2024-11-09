@@ -12,18 +12,18 @@ router
 
 
   // Purchases :=
-  .post("/figures/purchase", isAuthorized, controller.purchaseFigures)  //done tested
+  .post("/figures/purchase", isAuthorized, controller.purchaseFigures)  //done 
 
-  .get("/all-purchases/:userId", isAuthorized, isAdmin, controller.getAllPurchases) //done tested
+  .get("/all-purchases/:userId", isAuthorized, isAdmin, controller.getAllPurchases) //done
 
-  .post("/user-purchases/:userId", isAuthorized, controller.userPurchases) //done tested
+  .post("/user-purchases/:userId", isAuthorized, controller.userPurchases) //done
 
   .get("/single-user-purchases/:purchaseId", isAuthorized, isAdmin, controller.SingleuserPurchases) //done tested
 
   .put("/update-purchases/:purchaseId", isAuthorized, isAdmin, controller.updateSinglePurchase) //done tested
 
 
-  .post("/admin-purchase/:userId", isAuthorized, controller.adminPurchaseFigures)  //done tested
+  .post("/admin-purchase/:userId", isAuthorized, controller.adminPurchaseFigures)  //done
 
   .delete("/delete-purchases/:purchaseId", isAuthorized, isAdmin, controller.deleteSinglePurchase) //done tested
   .post("/price-purchases", controller.processBondFigures) //done tested for sheet to check passy layna hayn ka dayna hayn
