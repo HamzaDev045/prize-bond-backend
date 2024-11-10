@@ -82,7 +82,7 @@ export const purchaseFigures = async (req, res) => {
 export const getAllPurchases = async (req, res) => {
   try {
     const { userId } = req.params;
-
+    const { page = 1, limit = 6 } = req.query;
     if (!userId) {
       return res.status(400).json({
         isSuccess: false,
@@ -90,7 +90,11 @@ export const getAllPurchases = async (req, res) => {
       });
     }
 
-    const purchases = await Purchase.find({ userId: userId });
+    const purchases = await Purchase.find({ userId: userId })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit))
+    .exec();
 
     if (!purchases || purchases.length === 0) {
       return res.status(404).json({

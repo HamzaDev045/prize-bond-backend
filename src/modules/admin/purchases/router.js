@@ -13,8 +13,8 @@ router
 
   // Purchases :=
   .post("/figures/purchase", isAuthorized, controller.purchaseFigures)  //done 
-
-  .get("/all-purchases/:userId", isAuthorized, isAdmin, controller.getAllPurchases) //done
+  // isAuthorized, isAdmin,
+  .get("/all-purchases/:userId",  controller.getAllPurchases) //done
 
   .post("/user-purchases/:userId", isAuthorized, controller.userPurchases) //done
   .post("/user-ledger/:userId", isAuthorized, controller.userledger)

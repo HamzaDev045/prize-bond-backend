@@ -9,6 +9,10 @@ const purchaseSchema = new mongoose.Schema({
         second: { type: Number },
     },
     bondType:{type:String},
+    createdAt: { 
+        type: Date, 
+        default: Date.now
+      },
     isNormal: { type: Boolean, default: true }, 
 });
 export const Purchase = mongoose.model('Purchase', purchaseSchema);
