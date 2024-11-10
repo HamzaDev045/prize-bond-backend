@@ -158,6 +158,121 @@ export const userPurchases = async (req, res) => {
   }
 };
 
+export const userledger = async (req, res) => {
+
+  try {
+    const { userId } = req.params;
+    const { bondType } = req.body;
+    if (!bondType) {
+      return res.status(400).json({ message: "Invalid Data" });
+    }
+    // const match = bondType.match(/^([A-Z]+)(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    const match = bondType.match(/^([A-Z:0-9]+?)(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    const bond = match[1];
+    const date = match[2];
+
+    if(!bond || !date){
+      return res.status(400).json({ message: "Invalid Bond" });
+    }
+
+    if (!userId) {
+      return res.status(400).json({
+        isSuccess: false,
+        message: "Missing userId parameter.",
+      });
+    }
+
+    const user = await UserModel.findById(userId);
+    if(!user){
+      return res.status(400).json({
+        isSuccess: false,
+        message: "user not found .",
+      });
+    }
+
+    const purchases = await Purchase.find({ userId: userId, bondType: bond, date: date });
+    if (!purchases || purchases.length === 0) {
+      return res.status(404).json({
+        isSuccess: false,
+        message: "No purchases found for this user.",
+      });
+    }
+
+    const categorizedPurchases = {
+      first: [],
+      second: [],
+      third: [],
+      fourth: []
+    };
+
+    purchases.forEach(purchase => {
+      // purchase.forEach(figure => {
+        const figureLength = purchase.figures.figure.toString().length;
+
+        if (figureLength === 1) {
+          categorizedPurchases.first.push(purchase);
+        } else if (figureLength === 2) {
+          categorizedPurchases.second.push(purchase);
+        } else if (figureLength === 3) {
+          categorizedPurchases.third.push(purchase);
+        } else if (figureLength === 4) {
+          categorizedPurchases.fourth.push(purchase);
+        }
+    });
+    const results = {
+      first: { total: 0, commission: 0, remain: 0 },
+      second: { total: 0, commission: 0, remain: 0 },
+      third: { total: 0, commission: 0, remain: 0 },
+      fourth: { total: 0, commission: 0, remain: 0 },
+    };
+
+    function calculateCommissionAndRemain(total, figureLength, user) {
+      let commissionRate = 0;
+      if (figureLength === 1 || figureLength === 2 || figureLength === 3) {
+        commissionRate = user?.initialFigureCommision / 100;
+      } else if (figureLength === 4) {
+        commissionRate = user?.forthFigureCommision / 100;
+      }
+    
+      const commission = total * commissionRate;
+      const remain = total - commission;
+    
+      return { commission, remain };
+    }
+
+    for (const category in categorizedPurchases) {
+      const total = categorizedPurchases[category].reduce((sum, purchase) => {
+        return sum + (purchase?.figures?.first + purchase?.figures?.second); 
+      }, 0);
+    
+      const figureLength = 
+        category === 'first' ? 1 : 
+        category === 'second' ? 2 : 
+        category === 'third' ? 3 : 4;
+    
+      const { commission, remain } = calculateCommissionAndRemain(total, figureLength, user);
+    
+      results[category] = {
+        total,
+        commission,
+        remain
+      };
+    }
+
+    res.status(200).json({
+      isSuccess: true,
+      message: "User purchases retrieved successfully",
+      data: {categorizedPurchases ,results},
+    });
+  } catch (err) {
+    console.error("Error retrieving user purchases:", err);
+    res.status(500).json({
+      isSuccess: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 export const SingleuserPurchases = async (req, res) => {
   try {
     const { purchaseId } = req.params;
@@ -666,6 +781,7 @@ export default {
   purchaseFigures,
   getAllPurchases,
   userPurchases,
+  userledger,
   SingleuserPurchases,
   updateSinglePurchase,
   deleteSinglePurchase,

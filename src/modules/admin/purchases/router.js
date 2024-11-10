@@ -17,7 +17,7 @@ router
   .get("/all-purchases/:userId", isAuthorized, isAdmin, controller.getAllPurchases) //done
 
   .post("/user-purchases/:userId", isAuthorized, controller.userPurchases) //done
-
+  .post("/user-ledger/:userId", isAuthorized, controller.userledger)
   .get("/single-user-purchases/:purchaseId", isAuthorized, isAdmin, controller.SingleuserPurchases) //done tested
 
   .put("/update-purchases/:purchaseId", isAuthorized, isAdmin, controller.updateSinglePurchase) //done tested
